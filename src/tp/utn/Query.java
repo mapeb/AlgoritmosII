@@ -54,17 +54,31 @@ public class Query {
 	public void addAttr(String atrr){
 		this.getSelect().add(atrr);
 	}
-	public void addJoin(Class table,Class table2){ 
-		Table tabla2 = (Table) table2.getAnnotation(Table.class);
-		from+=" JOIN " + tabla2.name() + " ON (" + identificador(table) + "=" + identificador(table2) + ")";
+	public void addJoin(Class clase,Class clase2){ 
+	//	Table tabla2 = (Table) clase2.getAnnotation(Table.class);
+		from+=" JOIN " + nombreTabla(clase) + joinDeTablas(clase,clase2);
 	}
 	
-	private String identificador(Class table) {
-		for (Field field: table.getDeclaredFields()) {
+	private String joinDeTablas(Class claseSolicitante,Class claseSolicitada) {
+		String comparacion = " ON ( " + nombreTabla(claseSolicitante) + ".";
+		
+		for (Field field: claseSolicitante.getDeclaredFields()) {
+			if(field.getType() == claseSolicitada){
+				comparacion+= field.getAnnotation(Column.class).name() + " = ";
+				break; // Esta mal porque si hay dos variables con el mismo tipo distinto nombre
+			}
+		}
+		comparacion += nombreTabla(claseSolicitada) + ".";
+		
+		for (Field field: claseSolicitada.getDeclaredFields()) {
 			if(field.getAnnotation(Id.class) != null)
-				return field.getAnnotation(Column.class).name();
+				return comparacion + field.getAnnotation(Column.class).name() + " )";
 		}
 		return ""; // Hola si la funcion no tiene id debo explotar, ya se .
+	}
+	
+	private String nombreTabla(Class clase){
+		return ((Table)clase.getAnnotation(Table.class)).name();
 	}
 	
 	public List<String> getSelect() {

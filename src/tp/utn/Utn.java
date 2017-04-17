@@ -24,6 +24,7 @@ public class Utn {
 
 	// Invoca a: _query para obtener el SQL que se debe ejecutar
 	// Retorna: una lista de objetos de tipo T
+	// EJ: query(con,dtoClass,"$nombre  LIKE 'P%'") Donde $ indica variable de la clase.
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
 
 		return null;
