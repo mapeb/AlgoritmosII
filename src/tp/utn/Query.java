@@ -38,7 +38,7 @@ public class Query {
 		for(String attr:this.getSelect())
 			q+=attr + ",";
 		q=q.substring(0,q.length()-1);
-		q+=" FROM "+from + xql;
+		q+=" FROM "+ from + xql;
 		return q;
 	}
 
@@ -54,8 +54,9 @@ public class Query {
 	public void addAttr(String atrr){
 		this.getSelect().add(atrr);
 	}
-	public void addJoin(Class table,Class table2){ // table2.getAnnotation(Table.class).name()
-		from+=" JOIN " + table2.getSimpleName() + " ON (" + identificador(table) + "=" + identificador(table2) + ")";
+	public void addJoin(Class table,Class table2){ 
+		Table tabla2 = (Table) table2.getAnnotation(Table.class);
+		from+=" JOIN " + tabla2.name() + " ON (" + identificador(table) + "=" + identificador(table2) + ")";
 	}
 	
 	private String identificador(Class table) {
