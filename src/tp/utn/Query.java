@@ -26,7 +26,7 @@ public class Query {
 			else {
 				Class clase = campo.getType();
 				if (campo.getType().getAnnotation(Table.class) != null) {
-					this.addJoin(dtoClass, campo.getType());
+					this.addJoin(campo, campo.getType());
 					generarQuery(campo.getType().getDeclaredFields(), campo.getType());
 				}
 			}
@@ -54,20 +54,14 @@ public class Query {
 	public void addAttr(String atrr){
 		this.getSelect().add(atrr);
 	}
-	public void addJoin(Class clase,Class clase2){ 
+	public void addJoin(Field campoSolicitante,Class clase2){ 
 	//	Table tabla2 = (Table) clase2.getAnnotation(Table.class);
-		from+=" JOIN " + nombreTabla(clase) + joinDeTablas(clase,clase2);
+		from+=" JOIN " + nombreTabla(campoSolicitante.getType()) + joinDeTablas(campoSolicitante,clase2);
 	}
 	
-	private String joinDeTablas(Class claseSolicitante,Class claseSolicitada) {
-		String comparacion = " ON ( " + nombreTabla(claseSolicitante) + ".";
-		
-		for (Field field: claseSolicitante.getDeclaredFields()) {
-			if(field.getType() == claseSolicitada){
-				comparacion+= field.getAnnotation(Column.class).name() + " = ";
-				break; // Esta mal porque si hay dos variables con el mismo tipo distinto nombre
-			}
-		}
+	private String joinDeTablas(Field campoSolicitante,Class claseSolicitada) {
+		String comparacion = " ON ( " + nombreTabla(campoSolicitante.getType());
+		comparacion+= "." + campoSolicitante.getAnnotation(Column.class).name() + " = ";
 		comparacion += nombreTabla(claseSolicitada) + ".";
 		
 		for (Field field: claseSolicitada.getDeclaredFields()) {
