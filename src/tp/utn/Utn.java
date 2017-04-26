@@ -13,7 +13,7 @@ import tp.utn.demo.domain.Persona;
 public class Utn {
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql <- la
 	// consulta
-	private static <T> String _query(Class<T> dtoClass, String xql) {
+	public static <T> String _query(Class<T> dtoClass, String xql) {
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		Field[] campos = dtoClass.getDeclaredFields();
 

@@ -1,3 +1,5 @@
+
+
 package tp.utn;
 
 import java.lang.reflect.Field;
@@ -22,11 +24,11 @@ public class Query {
 	public void generarQuery(Field[] campos, Class dtoClass) {
 		for (Field campo : campos) {
 			if (campo.getAnnotation(Column.class) != null && isPrimiteClass(campo))
-				this.addAttr(campo.getAnnotation(Column.class).name());
+				this.addAttr(dtoClass,campo.getAnnotation(Column.class).name());
 			else {
-				Class clase = campo.getType();
-				if (campo.getType().getAnnotation(Table.class) != null) {
-					this.addJoin(campo, campo.getType());
+				if (campo.getType().getAnnotation(Table.class) != null && campo.getAnnotation(Column.class).fetchType() == 2) {
+				//	this.addJoin(campo, campo.getType());
+					this.addJoin(dtoClass, campo);
 					generarQuery(campo.getType().getDeclaredFields(), campo.getType());
 				}
 			}
@@ -38,7 +40,7 @@ public class Query {
 		for(String attr:this.getSelect())
 			q+=attr + ",";
 		q=q.substring(0,q.length()-1);
-		q+=" FROM "+ from + xql;
+		q+=" FROM "+ from + " " + xql;
 		return q;
 	}
 
@@ -51,20 +53,21 @@ public class Query {
 		return false;
 	}
 
-	public void addAttr(String atrr){
-		this.getSelect().add(atrr);
+	public void addAttr(Class claseContenedora ,String atrr){
+		String newAtrr = nombreTabla(claseContenedora) + "." +atrr;
+		this.getSelect().add(newAtrr);
 	}
-	public void addJoin(Field campoSolicitante,Class clase2){ 
+	public void addJoin(Class claseRaiz,Field campo){ 
 	//	Table tabla2 = (Table) clase2.getAnnotation(Table.class);
-		from+=" JOIN " + nombreTabla(campoSolicitante.getType()) + joinDeTablas(campoSolicitante,clase2);
+		from+=" JOIN " + nombreTabla(campo.getType()) + joinDeTablas(claseRaiz,campo);
 	}
 	
-	private String joinDeTablas(Field campoSolicitante,Class claseSolicitada) {
-		String comparacion = " ON ( " + nombreTabla(campoSolicitante.getType());
-		comparacion+= "." + campoSolicitante.getAnnotation(Column.class).name() + " = ";
-		comparacion += nombreTabla(claseSolicitada) + ".";
+	private String joinDeTablas(Class campoSolicitante,Field campoSolicitado) {
+		String comparacion = " ON ( " + nombreTabla(campoSolicitante);
+		comparacion+= "." + campoSolicitado.getAnnotation(Column.class).name() + " = ";
+		comparacion += nombreTabla(campoSolicitado.getType()) + ".";
 		
-		for (Field field: claseSolicitada.getDeclaredFields()) {
+		for (Field field: campoSolicitado.getType().getDeclaredFields()) {
 			if(field.getAnnotation(Id.class) != null)
 				return comparacion + field.getAnnotation(Column.class).name() + " )";
 		}
