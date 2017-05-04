@@ -19,6 +19,18 @@ public class Persona
 	@Column(name="id_ocupacion")
 	public Ocupacion ocupacion;
 
+	public Persona(Integer unId, String unNombre, Direccion unaDireccion, Ocupacion unaOcupacion)
+	{
+		this.setIdPersona(unId);
+		this.setNombre(unNombre);
+		this.setDireccion(unaDireccion);
+		this.setOcupacion(unaOcupacion);
+		
+	}
+	public Persona()
+	{
+		super();
+	}
 	public Integer getIdPersona()
 	{
 		return idPersona;
