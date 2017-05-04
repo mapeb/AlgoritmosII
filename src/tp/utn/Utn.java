@@ -1,6 +1,8 @@
 package tp.utn;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +21,7 @@ public class Utn {
 	public static <T> String _query(Class<T> dtoClass, String xql) {
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		Field[] campos = dtoClass.getDeclaredFields();
+		
 
 		query.generarQuery(campos, dtoClass);
 		
@@ -29,47 +32,10 @@ public class Utn {
 	// Retorna: una lista de objetos de tipo T
 	// EJ: query(con,dtoClass,"$nombre  LIKE 'P%'") Donde $ indica variable de la clase.
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
-		List<T> filas;
-		PreparedStatement pstm = null;
-		ResultSet rs = null;
-		try
-		{
-		con = SingletonConexion.getConnection();
-		String sql = _query(dtoClass, xql);
-		pstm = con.prepareStatement(sql);
-		rs = pstm.executeQuery();
+		Query miQ = new Query();
+		String query = _query(dtoClass, xql);
+		return miQ.obtenerObjetosDeBD(dtoClass,query);
 		
-		while(rs.next())
-		{
-			//Class<T> objeto = (Class<T>) dtoClass.getClass();
-			
-		
-		}
-		
-		}
-		catch(Exception ex)
-		{
-			ex.printStackTrace();
-			throw new RuntimeException(ex);
-		}
-		finally
-		{
-			try
-			{
-				if(rs!=null) rs.close();
-				if(pstm!=null) pstm.close();
-				
-			}
-			catch(Exception ex)
-			{
-				ex.printStackTrace();
-				throw new RuntimeException(ex);
-			}
-			
-		}
-		 
-		
-		return null;
 	}
 
 	// Retorna: una fila identificada por id o null si no existe
