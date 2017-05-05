@@ -3,6 +3,7 @@ package tp.utn.main;
 import java.sql.DriverManager;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,12 +21,18 @@ public class Main
 {
 
 
-	public static void main(String[] args) throws SQLException
+	public static <T> void main(String[] args) throws SQLException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 
-		 String query = Utn._query(Persona.class, "where nombre = ?");
+		 String query = Utn._query(Persona.class,"where nombre = ?");
 		 System.out.println(query);
-	
+		 
+		List<T> lista = (List<T>) Utn.query(null,Persona.class,"where persona.nombre = ?","Juani");
+		
+		/*System.out.println(lista.size());
+		Method metodo = lista.get(0).getClass().getMethod("getNombre",null);
+		Object objeto = lista.get(0);
+		System.out.println(metodo.invoke(objeto,null));*/
 
 	}
 

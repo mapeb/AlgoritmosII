@@ -34,7 +34,7 @@ public class Utn {
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
 		Query miQ = new Query();
 		String query = _query(dtoClass, xql);
-		return miQ.obtenerObjetosDeBD(dtoClass,query);
+		return miQ.obtenerObjetosDeBD(dtoClass,query,args);
 		
 	}
 
@@ -101,7 +101,7 @@ public class Utn {
 
 	public static void main(String[] args) {
 		Persona x = new Persona();
-		x.setDireccion(new Direccion());
+		//x.setDireccion(new Direccion());
 		System.out.println(Utn._query(x.getClass(), " WHere edad == 2"));
 	}
 

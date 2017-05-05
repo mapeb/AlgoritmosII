@@ -105,7 +105,7 @@ public class Query {
 		this.from = n;
 	}	
 	
-	public <T> List<T> obtenerObjetosDeBD(Class dtoClass, String query)
+	public <T> List<T> obtenerObjetosDeBD(Class dtoClass, String query,Object[] args)
 	{
 
 		Connection con=SingletonConexion.getConnection();
@@ -116,6 +116,7 @@ public class Query {
 			con=SingletonConexion.getConnection();
 			String sql= query;
 			pstm=con.prepareStatement(sql);
+			pstm.setString(1,(String)args[0]);
 			rs=pstm.executeQuery();
 			
 			Class<T> clazz=(Class<T>)Class.forName(dtoClass.getName());

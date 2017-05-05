@@ -13,18 +13,18 @@ public class Persona
 	@Column(name="nombre")
 	private String nombre;
 		
-	@Column(name="id_direccion")
+	/*@Column(name="id_direccion")    LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR ESTA PARTE
 	public Direccion direccion;
 	
 	@Column(name="id_ocupacion")
-	public Ocupacion ocupacion;
+	public Ocupacion ocupacion;*/
 
 	public Persona(Integer unId, String unNombre, Direccion unaDireccion, Ocupacion unaOcupacion)
 	{
 		this.setIdPersona(unId);
 		this.setNombre(unNombre);
-		this.setDireccion(unaDireccion);
-		this.setOcupacion(unaOcupacion);
+		//this.setDireccion(unaDireccion);
+		//this.setOcupacion(unaOcupacion);
 		
 	}
 	public Persona()
@@ -51,12 +51,12 @@ public class Persona
 		this.nombre=nombre;
 	}
 
-	public Direccion getDireccion()
+	/*public Direccion getDireccion()
 	{
 		return direccion;
-	}
+	}*/
 
-	public void setDireccion(Direccion direccion)
+	/*public void setDireccion(Direccion direccion)
 	{
 		this.direccion=direccion;
 	}
@@ -69,9 +69,9 @@ public class Persona
 	public void setOcupacion(Ocupacion ocupacion)
 	{
 		this.ocupacion=ocupacion;
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public String toString()
 	{
 		return "Persona [idPersona="+idPersona+", nombre="+nombre+", direccion="+direccion+", ocupacion="+ocupacion+"]";
@@ -104,7 +104,7 @@ public class Persona
 		}
 		
 		return ok;
-	}
+	}*/
 	
 	
 	
