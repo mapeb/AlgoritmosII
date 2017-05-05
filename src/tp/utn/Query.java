@@ -4,10 +4,12 @@ package tp.utn;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -104,7 +106,72 @@ public class Query {
 	public void setFrom(String n) {
 		this.from = n;
 	}	
-	
+	public ArrayList<Method> obtenerSetters(Method metodos[])
+	{
+		ArrayList<Method> setters = new ArrayList<Method>();
+		for(Method metodo:metodos)
+		{
+			if(metodo.getName().substring(0,3).equals("set"))
+				setters.add(metodo);
+		}
+		return setters;
+	}
+	public String stringMinuscula(String palabra)
+	{
+		return (palabra.substring(0,1).toLowerCase()+ palabra.substring(1));
+		
+	}
+	public void settearSobreObjeto(ResultSet rs, Class type, String nombreEnTabla, Method setter, Object objeto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException
+	{
+		try{
+		if(type==int.class||type==Integer.class) setter.invoke(objeto,rs.getInt(nombreEnTabla));
+		
+		else
+		{	
+		Method[] metodosStatement = rs.getClass().getDeclaredMethods();
+		
+		for(Method metodo : metodosStatement)
+		{
+			String tipoClase;
+			String tipoClaseMin;
+			int valorInt;
+			if(metodo.getName().substring(0,3).equals("get"))
+			{
+				
+				tipoClase = metodo.getName().substring(3);
+				tipoClaseMin = stringMinuscula(tipoClase);
+			
+				if(type.getSimpleName().equals(tipoClase) || type.getSimpleName().equals(tipoClaseMin) )
+				{
+															
+					Class parametros[] = metodo.getParameterTypes();
+					int cantidadParametros = 0;
+					for(Class parametro : parametros)
+						cantidadParametros++;
+					if(cantidadParametros == 1 && parametros[0].getSimpleName().equals(type.getSimpleName())
+		)
+					{
+				System.out.println(metodo.getName());
+						Object valor = metodo.invoke(rs,nombreEnTabla);
+						setter.invoke(objeto, valor);
+					}
+				
+				}
+					//obtenerObjetosDeBD(dtoClass,query,args)
+			}
+		}
+		}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			throw new RuntimeException(ex);
+		}
+	}
+	public String nombreEnTabla(Class dtoClass, Field campo)
+	{
+		return nombreTabla(dtoClass)+"."+campo.getAnnotation(Column.class).name();
+	}
 	public <T> List<T> obtenerObjetosDeBD(Class dtoClass, String query,Object[] args)
 	{
 
@@ -125,12 +192,9 @@ public class Query {
 
 			Field[] campos=dtoClass.getDeclaredFields();
 			Method metodos[]=dtoClass.getDeclaredMethods();
-			ArrayList<Method> setters=new ArrayList<Method>();
-			for(Method metodo:metodos)
-			{
-				if(metodo.getName().substring(0,3).equals("set"))
-					setters.add(metodo);
-			}
+			ArrayList<Method> setters= obtenerSetters(metodos);
+			
+			
 			List<T> objetos=new ArrayList<T>();
 			while(rs.next())
 			{
@@ -138,55 +202,18 @@ public class Query {
 				for(Method setter:setters)
 				{
 					String atributoDelSetter=setter.getName().substring(3);
-					atributoDelSetter=atributoDelSetter.substring(0,1).toLowerCase()+atributoDelSetter.substring(1);
+					atributoDelSetter = stringMinuscula(atributoDelSetter);
 					for(Field campo:campos)
 					{
 						if(campo.getName().equals(atributoDelSetter)&&campo.getAnnotation(Column.class)!=null)
 						{
 
-							String nombreEnTabla=nombreTabla(dtoClass)+"."+campo.getAnnotation(Column.class).name();
+							String nombreEnTabla= nombreEnTabla(dtoClass, campo);
 				
 							Class type=campo.getType();
-							//FALTA CON LOS CASOS QUE NO SEAN PRIMITIVOS
-							if(type==int.class||type==Integer.class) setter.invoke(objeto,rs.getInt(nombreEnTabla));
+							//FALTA CON LOS CASOS QUE NO SEAN PRIMITIVO
 							//if(type==String.class) setter.invoke(objeto,rs.getString(nombreEnTabla));
-							
-							else{	
-								Method[] metodosStatement = rs.getClass().getDeclaredMethods();
-							
-							for(Method metodo : metodosStatement)
-							{
-								String tipoClase;
-								String tipoClaseMin;
-								int valorInt;
-								if(metodo.getName().substring(0,3).equals("get"))
-								{
-									
-									tipoClase = metodo.getName().substring(3);
-									tipoClaseMin = tipoClase.substring(0,1).toLowerCase()+tipoClase.substring(1);
-								
-									if(type.getSimpleName().equals(tipoClase) || type.getSimpleName().equals(tipoClaseMin) )
-									{
-																				
-										Class parametros[] = metodo.getParameterTypes();
-										int cantidadParametros = 0;
-										for(Class parametro : parametros)
-											cantidadParametros++;
-										if(cantidadParametros == 1 && parametros[0].getSimpleName().equals(type.getSimpleName())
-							)
-										{
-									System.out.println(metodo.getName());
-											Object valor = metodo.invoke(rs,nombreEnTabla);
-											setter.invoke(objeto, valor);
-										}
-									
-									}
-										//obtenerObjetosDeBD(dtoClass,query,args)
-								}
-							}
-							}
-							
-							
+							settearSobreObjeto(rs, type, nombreEnTabla, setter, objeto);
 
 						}
 					}
