@@ -149,11 +149,44 @@ public class Query {
 							Class type=campo.getType();
 							//FALTA CON LOS CASOS QUE NO SEAN PRIMITIVOS
 							if(type==int.class||type==Integer.class) setter.invoke(objeto,rs.getInt(nombreEnTabla));
+							//if(type==String.class) setter.invoke(objeto,rs.getString(nombreEnTabla));
 							
-							else
+							else{	
+								Method[] metodosStatement = rs.getClass().getDeclaredMethods();
+							
+							for(Method metodo : metodosStatement)
 							{
-								if(type==String.class) setter.invoke(objeto,rs.getString(nombreEnTabla));
+								String tipoClase;
+								String tipoClaseMin;
+								int valorInt;
+								if(metodo.getName().substring(0,3).equals("get"))
+								{
+									
+									tipoClase = metodo.getName().substring(3);
+									tipoClaseMin = tipoClase.substring(0,1).toLowerCase()+tipoClase.substring(1);
+								
+									if(type.getSimpleName().equals(tipoClase) || type.getSimpleName().equals(tipoClaseMin) )
+									{
+																				
+										Class parametros[] = metodo.getParameterTypes();
+										int cantidadParametros = 0;
+										for(Class parametro : parametros)
+											cantidadParametros++;
+										if(cantidadParametros == 1 && parametros[0].getSimpleName().equals(type.getSimpleName())
+							)
+										{
+									System.out.println(metodo.getName());
+											Object valor = metodo.invoke(rs,nombreEnTabla);
+											setter.invoke(objeto, valor);
+										}
+									
+									}
+										//obtenerObjetosDeBD(dtoClass,query,args)
+								}
 							}
+							}
+							
+							
 
 						}
 					}

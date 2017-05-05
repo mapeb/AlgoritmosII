@@ -29,11 +29,11 @@ public class Main
 		 
 		List<T> lista = (List<T>) Utn.query(null,Persona.class,"where persona.nombre = ?","Juani");
 		
-		/*System.out.println(lista.size());
+		System.out.println(lista.size());
 		Method metodo = lista.get(0).getClass().getMethod("getNombre",null);
 		Object objeto = lista.get(0);
 		Method metodo2 = objeto.getClass().getMethod("getIdPersona",null);
-		System.out.println(metodo.invoke(objeto,null) + " ," + metodo2.invoke(objeto,null));*/
+		System.out.println(metodo.invoke(objeto,null) + " ," + metodo2.invoke(objeto,null));
 
 	}
 
