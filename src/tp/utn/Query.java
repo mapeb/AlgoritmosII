@@ -131,7 +131,7 @@ public class Query {
 		}
 		return null;
 	}
-	public <T> void settearPrimitivoSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException
+	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException
 	{
 		Class type=campo.getType();
 		try{
@@ -208,7 +208,7 @@ public class Query {
 				{
 					String nombreEnTabla= nombreAtributoEnTabla(dtoClass, campo);
 					//if(type==String.class) setter.invoke(objeto,rs.getString(nombreEnTabla));
-					settearPrimitivoSobreObjeto(rs, campo, nombreEnTabla, setter, objeto);
+					settearSobreObjeto(rs, campo, nombreEnTabla, setter, objeto);
 				}
 			}
 			
