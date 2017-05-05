@@ -16,9 +16,9 @@ public class Persona
 	
 		
 	//LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR CASO DONDE CAMPO NO PRIMITIVO
-	/*@Column(name="id_direccion")    
+	@Column(name="id_direccion")    
 	public Direccion direccion;
-	
+	/*
 	@Column(name="id_ocupacion")
 	public Ocupacion ocupacion;*/
 
@@ -54,16 +54,16 @@ public class Persona
 		this.nombre=nombre;
 	}
 
-	/*public Direccion getDireccion()
+	public Direccion getDireccion()
 	{
 		return direccion;
-	}*/
+	}
 
-	/*public void setDireccion(Direccion direccion)
+	public void setDireccion(Direccion direccion)
 	{
 		this.direccion=direccion;
 	}
-
+/*
 	public Ocupacion getOcupacion()
 	{
 		return ocupacion;

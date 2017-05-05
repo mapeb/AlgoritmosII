@@ -34,11 +34,14 @@ public class Main
 		Object objeto = lista.get(0);
 		Method metodo2 = objeto.getClass().getMethod("getIdPersona",null);
 		System.out.println(metodo.invoke(objeto,null) + " ," + metodo2.invoke(objeto,null));
-		
-		Method metodo3 = lista.get(1).getClass().getMethod("getNombre",null);
+		Method metodo3 = objeto.getClass().getMethod("getDireccion",null);
+		Direccion direccionJuani = (Direccion) metodo3.invoke(objeto,null);
+		System.out.println(direccionJuani.getCalle());
+		System.out.println(direccionJuani.getNumero());
+		/*Method metodo3 = lista.get(1).getClass().getMethod("getNombre",null);
 		Object objeto2 = lista.get(1);
 		Method metodo4 = objeto2.getClass().getMethod("getIdPersona",null);
-		System.out.println(metodo.invoke(objeto2,null) + " ," + metodo4.invoke(objeto2,null));
+		System.out.println(metodo.invoke(objeto2,null) + " ," + metodo4.invoke(objeto2,null));*/
 
 	}
 

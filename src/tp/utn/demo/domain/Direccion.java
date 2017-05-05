@@ -19,18 +19,18 @@ public class Direccion
 	@Column(name="numero")
 	private int numero;
 	
-	@Relation(type=Persona.class,att="direccion")
-	private Collection<Persona> personas;
+	/*@Relation(type=Persona.class,att="direccion")
+	private Collection<Persona> personas;*/
 
 	// Getters y setters
-	public Collection<Persona> getPersonas()
+	/*public Collection<Persona> getPersonas()
 	{
 		return personas;
 	}
 	public void setPersonas(Collection<Persona> personas)
 	{
 		this.personas=personas;
-	}
+	}*/
 	public Integer getIdDireccion()
 	{
 		return idDireccion;
