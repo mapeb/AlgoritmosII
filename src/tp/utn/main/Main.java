@@ -38,6 +38,12 @@ public class Main
 		Direccion direccionJuani = (Direccion) metodo3.invoke(objeto,null);
 		System.out.println(direccionJuani.getCalle());
 		System.out.println(direccionJuani.getNumero());
+		Method metodoOcupacion = objeto.getClass().getMethod("getOcupacion",null);
+		Ocupacion ocupacionJuani = (Ocupacion) metodoOcupacion.invoke(objeto,null);
+		System.out.println(ocupacionJuani.getDescripcion());
+		Method metodoTipoOcupacion = ocupacionJuani.getClass().getMethod("getTipoOcupacion",null);
+		TipoOcupacion tipoJuani = (TipoOcupacion) metodoTipoOcupacion.invoke(ocupacionJuani,null);
+		System.out.println(tipoJuani.getDescripcion());
 		/*Method metodo3 = lista.get(1).getClass().getMethod("getNombre",null);
 		Object objeto2 = lista.get(1);
 		Method metodo4 = objeto2.getClass().getMethod("getIdPersona",null);

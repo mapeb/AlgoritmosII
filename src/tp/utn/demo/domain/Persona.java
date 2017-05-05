@@ -12,15 +12,14 @@ public class Persona
 	
 	@Column(name="nombre")
 	private String nombre;
-	
-	
+
 		
 	//LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR CASO DONDE CAMPO NO PRIMITIVO
 	@Column(name="id_direccion")    
 	public Direccion direccion;
-	/*
+	
 	@Column(name="id_ocupacion")
-	public Ocupacion ocupacion;*/
+	public Ocupacion ocupacion;
 
 	public Persona(Integer unId, String unNombre, Direccion unaDireccion, Ocupacion unaOcupacion)
 	{
@@ -63,7 +62,7 @@ public class Persona
 	{
 		this.direccion=direccion;
 	}
-/*
+
 	public Ocupacion getOcupacion()
 	{
 		return ocupacion;
@@ -72,7 +71,7 @@ public class Persona
 	public void setOcupacion(Ocupacion ocupacion)
 	{
 		this.ocupacion=ocupacion;
-	}*/
+	}
 
 	/*@Override
 	public String toString()
