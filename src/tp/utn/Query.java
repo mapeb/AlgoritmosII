@@ -129,10 +129,7 @@ public class Query {
 			for(Method metodo:metodos)
 			{
 				if(metodo.getName().substring(0,3).equals("set"))
-				{
 					setters.add(metodo);
-
-				}
 			}
 			List<T> objetos=new ArrayList<T>();
 			while(rs.next())
@@ -144,14 +141,13 @@ public class Query {
 					atributoDelSetter=atributoDelSetter.substring(0,1).toLowerCase()+atributoDelSetter.substring(1);
 					for(Field campo:campos)
 					{
-
 						if(campo.getName().equals(atributoDelSetter)&&campo.getAnnotation(Column.class)!=null)
 						{
 
 							String nombreEnTabla=nombreTabla(dtoClass)+"."+campo.getAnnotation(Column.class).name();
 				
 							Class type=campo.getType();
-							
+							//FALTA CON LOS CASOS QUE NO SEAN PRIMITIVOS
 							if(type==int.class||type==Integer.class) setter.invoke(objeto,rs.getInt(nombreEnTabla));
 							
 							else

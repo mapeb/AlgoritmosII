@@ -13,7 +13,8 @@ public class Persona
 	@Column(name="nombre")
 	private String nombre;
 		
-	/*@Column(name="id_direccion")    LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR ESTA PARTE
+	//LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR CASO DONDE CAMPO NO PRIMITIVO
+	/*@Column(name="id_direccion")    
 	public Direccion direccion;
 	
 	@Column(name="id_ocupacion")

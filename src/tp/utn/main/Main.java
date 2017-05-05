@@ -32,7 +32,8 @@ public class Main
 		/*System.out.println(lista.size());
 		Method metodo = lista.get(0).getClass().getMethod("getNombre",null);
 		Object objeto = lista.get(0);
-		System.out.println(metodo.invoke(objeto,null));*/
+		Method metodo2 = objeto.getClass().getMethod("getIdPersona",null);
+		System.out.println(metodo.invoke(objeto,null) + " ," + metodo2.invoke(objeto,null));*/
 
 	}
 
