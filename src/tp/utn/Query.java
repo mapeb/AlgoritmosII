@@ -26,13 +26,14 @@ public class Query
 {
 	List<String> select;
 	String from;
-	ArrayList<String> variables =  new ArrayList<String>();
+	ArrayList<String> anotacionesVariables=new ArrayList<String>();
+
 	public Query(String from)
 	{
 		super();
 		select=new ArrayList<String>();
 		this.from=from;
-		
+
 	}
 
 	public Query()
@@ -56,19 +57,21 @@ public class Query
 			}
 		}
 	}
+
 	public String sacarPesos(String frase)
 	{
-		StringBuffer cadena = new StringBuffer();
-		String[] palabras = frase.split("\\$");
-		for(String palabra : palabras)
+		StringBuffer cadena=new StringBuffer();
+		String[] palabras=frase.split("\\$");
+		for(String palabra:palabras)
 		{
-			cadena = cadena.append(palabra);
+			cadena=cadena.append(palabra);
 		}
 		return cadena.toString();
 	}
+
 	public String generarString(String xql)
 	{
-		String xqlLimpio = sacarPesos(xql);
+		String xqlLimpio=sacarPesos(xql);
 		String q="SELECT ";
 		for(String attr:this.getSelect())
 			q+=attr+",";
@@ -134,8 +137,7 @@ public class Query
 		ArrayList<Method> settersOGetters=new ArrayList<Method>();
 		for(Method metodo:metodos)
 		{
-			if(esUnSetterOGetter(metodo,prefijo)) 
-				settersOGetters.add(metodo);
+			if(esUnSetterOGetter(metodo,prefijo)) settersOGetters.add(metodo);
 		}
 		return settersOGetters;
 	}
@@ -145,6 +147,7 @@ public class Query
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
 	}
+
 	public String stringMayuscula(String palabra)
 	{
 		return (palabra.substring(0,1).toUpperCase()+palabra.substring(1));
@@ -153,18 +156,20 @@ public class Query
 	public Method buscarSetterHijoAPadre(Object objetoHijo, Object objetoPadre)
 	{
 		Method metodosPadre[]=objetoPadre.getClass().getDeclaredMethods();
-		ArrayList<Method> settersPadre=obtenerSettersOGetters(metodosPadre, "set");
+		ArrayList<Method> settersPadre=obtenerSettersOGetters(metodosPadre,"set");
 		for(Method setter:settersPadre)
 		{
 			if(setter.getName().substring(3).equals(objetoHijo.getClass().getSimpleName())) return setter;
 		}
 		return null;
 	}
+
 	public boolean esUnSetterOGetter(Method metodo, String prefijo)
 	{
-		String nombre = metodo.getName();
+		String nombre=metodo.getName();
 		return nombre.substring(0,3).equals(prefijo);
 	}
+
 	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
@@ -181,11 +186,11 @@ public class Query
 					Object objetoCampo=null;
 
 					objetoCampo=constructor.newInstance();
-					settearValoresAObjeto(campo.getType(),objetoCampo,rs, listaObjetos);
+					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos);
 
 					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
 					settearObjeto.invoke(objeto,objetoCampo);
-					listaObjetos.add((T) objetoCampo);
+					listaObjetos.add((T)objetoCampo);
 
 				}
 				else
@@ -196,7 +201,7 @@ public class Query
 						String tipoClase;
 						String tipoClaseMin;
 						int valorInt;
-						if(esUnSetterOGetter(metodo, "get"))
+						if(esUnSetterOGetter(metodo,"get"))
 						{
 							tipoClase=metodo.getName().substring(3);
 							tipoClaseMin=stringMinuscula(tipoClase);
@@ -206,8 +211,7 @@ public class Query
 								int cantidadParametros=0;
 								for(Class parametro:parametros)
 									cantidadParametros++;
-								if(cantidadParametros==1&&parametros[0].getSimpleName().equals(type.getSimpleName()))
-									setter.invoke(objeto,metodo.invoke(rs,nombreEnTabla));
+								if(cantidadParametros==1&&parametros[0].getSimpleName().equals(type.getSimpleName())) setter.invoke(objeto,metodo.invoke(rs,nombreEnTabla));
 							}
 
 						}
@@ -226,26 +230,104 @@ public class Query
 	{
 		return nombreTabla(dtoClass)+"."+campo.getAnnotation(Column.class).name();
 	}
+
 	public <T> Constructor<?> obtenerConstructor(Class dtoClass) throws NoSuchMethodException,SecurityException,ClassNotFoundException
 	{
 		Class<T> clazz=(Class<T>)Class.forName(dtoClass.getName());
 		return clazz.getConstructor();
 	}
+
 	public String obtenerAtributoDelSetterOGetter(Method metodo)
 	{
 		return metodo.getName().substring(3);
-		
+
 	}
-	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos) throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
+
+	public String getTabla(String anotacionSQL)// ej: persona.id_persona
+	{
+		String retorno=null;
+		if(anotacionSQL.contains("."))
+		{
+
+			String[] division=anotacionSQL.split("\\.");
+			retorno=division[0];
+		}
+		return retorno;
+	}
+
+	public String sacarTabla(String anotacionSQL)
+	{
+		String atributo=null;
+		if(anotacionSQL.contains("."))
+		{
+
+			String[] division=anotacionSQL.split("\\.");
+			atributo=division[1];
+		}
+		return atributo;
+	}
+
+	public <T> ArrayList<String> obtenerVariablesDesdeAnotaciones(Class<T> dtoClass)
+	{
+		ArrayList<String> variables=new ArrayList<String>();
+		Field[] campos=dtoClass.getDeclaredFields();
+		ArrayList<String> anotacionesDeOtraClase=new ArrayList<String>();
+		for(String anotacion:anotacionesVariables)
+		{
+			if(getTabla(anotacion).equals(dtoClass.getAnnotation(Table.class).name()))
+			{
+
+				anotacion=sacarTabla(anotacion);
+				for(Field campo:campos)
+				{
+					if(campo.getAnnotation(Column.class).name().equals(anotacion))
+					{
+
+						variables.add(campo.getName());
+						break;
+					}
+				}
+			}
+			else
+			{
+				int i=0;
+				for(Field campito : campos)
+				{
+					if(!isPrimitiveClass(campito) && getTabla(anotacion).equals(campito.getType().getAnnotation(Table.class).name()))
+					{
+						anotacion = sacarTabla(anotacion);
+						Field[] camposSegundaClase = campito.getType().getDeclaredFields();
+						for(Field campoSegunda : camposSegundaClase)
+						{
+							if(campoSegunda.getAnnotation(Column.class).name().equals(anotacion))
+							{
+								variables.add(campoSegunda.getName());
+								i=1;
+								break;
+							}
+						}
+					}
+					if(i==1) break;
+				}
+			}
+
+		}
+
+		return variables;
+
+	}
+
+	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos)
+			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
 		Field[] campos=dtoClass.getDeclaredFields();
 		Method metodos[]=dtoClass.getDeclaredMethods();
-		ArrayList<Method> setters=obtenerSettersOGetters(metodos, "set");
+		ArrayList<Method> setters=obtenerSettersOGetters(metodos,"set");
 
 		for(Method setter:setters)
 		{
-			String atributoSetter = obtenerAtributoDelSetterOGetter(setter);
-			atributoSetter =  stringMinuscula(atributoSetter);
+			String atributoSetter=obtenerAtributoDelSetterOGetter(setter);
+			atributoSetter=stringMinuscula(atributoSetter);
 			for(Field campo:campos)
 			{
 				if(campo.getName().equals(atributoSetter)&&campo.getAnnotation(Column.class)!=null)
@@ -253,90 +335,96 @@ public class Query
 					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
 					// if(type==String.class)
 					// setter.invoke(objeto,rs.getString(nombreEnTabla));
-					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto, listaObjetos);
+					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
 				}
 			}
 
 		}
 	}
-	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException, SecurityException 
+
+	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException,SecurityException
 	{
-		Field[] camposClasePrincipal = dtoClass.getDeclaredFields();
-		for(Field campoClaseP : camposClasePrincipal)
+		Field[] camposClasePrincipal=dtoClass.getDeclaredFields();
+		for(Field campoClaseP:camposClasePrincipal)
 		{
 			if(!isPrimitiveClass(campoClaseP))
 			{
-				if(campoClaseP.getType().getDeclaredField(campo) != null)
+				if(campoClaseP.getType().getDeclaredField(campo)!=null)
 				{
-					Field campoSec = campoClaseP.getType().getDeclaredField(campo);
+					Field campoSec=campoClaseP.getType().getDeclaredField(campo);
 					return campoSec.getType().getSimpleName();
 				}
 			}
 		}
 		return null;
-		
+
 	}
-	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass) throws NoSuchFieldException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+
+	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass)
+			throws NoSuchFieldException,SecurityException,IllegalAccessException,IllegalArgumentException,InvocationTargetException
 	{
-		try{
-		String nuevaPalabra = null;
-		String[] palabras = xql.split(" ");
-		for(String palabra : palabras)
+		try
 		{
-			if(palabra.substring(0,1).equals("$"))
+			String nuevaPalabra=null;
+			String[] palabras=xql.split(" ");
+			for(String palabra:palabras)
 			{
-				palabra = palabra.substring(1);
-				if(palabra.contains("."))
+				if(palabra.substring(0,1).equals("$"))
 				{
-					
-					String[] division = palabra.split("\\.");
-					 nuevaPalabra = division[1];
-				}
-				variables.add(nuevaPalabra);
-			}
-		}
-		Method[] metodos=pstm.getClass().getDeclaredMethods();
-		ArrayList<Method> setters=obtenerSettersOGetters(metodos, "set");
-		int i = 0;
-		boolean esVariableDeLaClase = true;
-		String tipo = null;
-		for(String variable : variables)
-		{
-			try
-			{
-				dtoClass.getDeclaredField(variable);
-				
-			}
-			catch(NoSuchFieldException ex)
-			{
-				tipo = obtenerTipoCampoDeOtraClase(dtoClass, variable);
-				esVariableDeLaClase = false;
-			}
-			if(esVariableDeLaClase)
-			{
-			Field campo = dtoClass.getDeclaredField(variable);
-			 tipo = campo.getType().getSimpleName();
-			}
-			for(Method setter : setters)
-			{
-				if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)
-						|| obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo)))
-				{
-					setter.invoke(pstm,i+1,args[i]);
-					i++;
-					break;
+					palabra=palabra.substring(1);
+					/*
+					 * if(palabra.contains(".")) {
+					 * 
+					 * String[] division=palabra.split("\\.");
+					 * nuevaPalabra=division[1]; }
+					 */
+					anotacionesVariables.add(palabra);
 				}
 			}
-			
-		}
+			ArrayList<String> variables=obtenerVariablesDesdeAnotaciones(dtoClass);
+			Method[] metodos=pstm.getClass().getDeclaredMethods();
+			ArrayList<Method> setters=obtenerSettersOGetters(metodos,"set");
+			int i=0;
+			boolean esVariableDeLaClase=true;
+			String tipo=null;
+			for(String variable:variables)
+			{
+				try
+				{
+					dtoClass.getDeclaredField(variable);
+
+				}
+				catch(NoSuchFieldException ex)
+				{
+					tipo=obtenerTipoCampoDeOtraClase(dtoClass,variable);
+					esVariableDeLaClase=false;
+				}
+				if(esVariableDeLaClase)
+				{
+					Field campo=dtoClass.getDeclaredField(variable);
+					tipo=campo.getType().getSimpleName();
+				}
+				for(Method setter:setters)
+				{
+					if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)||obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo))
+							||(obtenerAtributoDelSetterOGetter(setter).equals("Int")&&tipo.equals("Integer")))
+					{
+						setter.invoke(pstm,i+1,args[i]);
+						i++;
+						break;
+					}
+				}
+
+			}
 		}
 		catch(Exception ex)
 		{
 			ex.printStackTrace();
 			throw new RuntimeException(ex);
 		}
-		
+
 	}
+
 	public <T> List<T> obtenerObjetosDeBD(Class dtoClass, String query, Object[] args, String xql)
 	{
 
@@ -348,8 +436,8 @@ public class Query
 			con=SingletonConexion.getConnection();
 			String sql=query;
 			pstm=con.prepareStatement(sql);
-			agregarCondicion(xql, pstm, args, dtoClass);
-			//pstm.setString(1,(String)args[0]);
+			agregarCondicion(xql,pstm,args,dtoClass);
+			// pstm.setString(1,(String)args[0]);
 			rs=pstm.executeQuery();
 
 			Constructor<?> constructor=obtenerConstructor(dtoClass);
@@ -359,7 +447,7 @@ public class Query
 			while(rs.next())
 			{
 				objeto=constructor.newInstance();
-				settearValoresAObjeto(dtoClass,objeto,rs, listaObjetos);
+				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos);
 				/*
 				 * Method
 				 * getterId=objeto.getClass().getMethod("getIdPersona",null);

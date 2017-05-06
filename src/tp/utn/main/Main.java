@@ -27,7 +27,7 @@ public class Main
 		 String query = Utn._query(Persona.class,"where nombre = ?");
 		 System.out.println(query);
 		 
-		List<T> lista = (List<T>) Utn.query(null,Persona.class,"where $persona.nombre = ? AND $direccion.numero = ?","Juani", 567);
+		List<T> lista = (List<T>) Utn.query(null,Persona.class,"where $persona.nombre = ? AND $direccion.numero = ? AND $persona.id_persona = ?","Juani", 567,6);
 		
 		System.out.println(lista.size());
 		int i = 0;
