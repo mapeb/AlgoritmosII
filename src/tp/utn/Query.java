@@ -145,6 +145,10 @@ public class Query
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
 	}
+	public String stringMayuscula(String palabra)
+	{
+		return (palabra.substring(0,1).toUpperCase()+palabra.substring(1));
+	}
 
 	public Method buscarSetterHijoAPadre(Object objetoHijo, Object objetoPadre)
 	{
@@ -255,7 +259,24 @@ public class Query
 
 		}
 	}
-	public void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass) throws NoSuchFieldException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException, SecurityException 
+	{
+		Field[] camposClasePrincipal = dtoClass.getDeclaredFields();
+		for(Field campoClaseP : camposClasePrincipal)
+		{
+			if(!isPrimitiveClass(campoClaseP))
+			{
+				if(campoClaseP.getType().getDeclaredField(campo) != null)
+				{
+					Field campoSec = campoClaseP.getType().getDeclaredField(campo);
+					return campoSec.getType().getSimpleName();
+				}
+			}
+		}
+		return null;
+		
+	}
+	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass) throws NoSuchFieldException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		try{
 		String nuevaPalabra = null;
@@ -277,19 +298,36 @@ public class Query
 		Method[] metodos=pstm.getClass().getDeclaredMethods();
 		ArrayList<Method> setters=obtenerSettersOGetters(metodos, "set");
 		int i = 0;
+		boolean esVariableDeLaClase = true;
+		String tipo = null;
 		for(String variable : variables)
 		{
+			try
+			{
+				dtoClass.getDeclaredField(variable);
+				
+			}
+			catch(NoSuchFieldException ex)
+			{
+				tipo = obtenerTipoCampoDeOtraClase(dtoClass, variable);
+				esVariableDeLaClase = false;
+			}
+			if(esVariableDeLaClase)
+			{
 			Field campo = dtoClass.getDeclaredField(variable);
-			String tipo = campo.getType().getSimpleName();
+			 tipo = campo.getType().getSimpleName();
+			}
 			for(Method setter : setters)
 			{
-				if(obtenerAtributoDelSetterOGetter(setter).equals(tipo))
+				if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)
+						|| obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo)))
 				{
 					setter.invoke(pstm,i+1,args[i]);
 					i++;
 					break;
 				}
 			}
+			
 		}
 		}
 		catch(Exception ex)
