@@ -14,7 +14,7 @@ public class Persona
 	private String nombre;
 
 		
-	//LO SAQUE PARA PROBAR FUNCIONAMIENTO. FALTA DESARROLLAR CASO DONDE CAMPO NO PRIMITIVO
+	
 	@Column(name="id_direccion")    
 	public Direccion direccion;
 	
