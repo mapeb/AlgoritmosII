@@ -34,7 +34,7 @@ public class Utn {
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
 		Query miQ = new Query();
 		String query = _query(dtoClass, xql);
-		return miQ.obtenerObjetosDeBD(dtoClass,query,args);
+		return miQ.obtenerObjetosDeBD(dtoClass,query,args, xql);
 		
 	}
 
