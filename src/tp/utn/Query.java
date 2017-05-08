@@ -333,8 +333,6 @@ public class Query
 				if(campo.getName().equals(atributoSetter)&&campo.getAnnotation(Column.class)!=null)
 				{
 					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
-					// if(type==String.class)
-					// setter.invoke(objeto,rs.getString(nombreEnTabla));
 					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
 				}
 			}
@@ -372,12 +370,6 @@ public class Query
 				if(palabra.substring(0,1).equals("$"))
 				{
 					palabra=palabra.substring(1);
-					/*
-					 * if(palabra.contains(".")) {
-					 * 
-					 * String[] division=palabra.split("\\.");
-					 * nuevaPalabra=division[1]; }
-					 */
 					anotacionesVariables.add(palabra);
 				}
 			}
@@ -425,15 +417,15 @@ public class Query
 
 	}
 
-	public <T> List<T> obtenerObjetosDeBD(Class dtoClass, String query, Object[] args, String xql)
+	public <T> List<T> obtenerObjetosDeBD(Connection con, Class dtoClass, String query, Object[] args, String xql)
 	{
 
-		Connection con=null;
+		Connection conexion=con;
 		PreparedStatement pstm=null;
 		ResultSet rs=null;
 		try
 		{
-			con=SingletonConexion.getConnection();
+			
 			String sql=query;
 			pstm=con.prepareStatement(sql);
 			agregarCondicion(xql,pstm,args,dtoClass);
@@ -448,13 +440,6 @@ public class Query
 			{
 				objeto=constructor.newInstance();
 				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos);
-				/*
-				 * Method
-				 * getterId=objeto.getClass().getMethod("getIdPersona",null);
-				 * System.out.println(getterId.invoke(objeto,null)); Method
-				 * getterNombre=objeto.getClass().getMethod("getNombre",null);
-				 * System.out.println(getterNombre.invoke(objeto,null));
-				 */
 				listaObjetos.add((T)objeto);
 			}
 			return listaObjetos;
