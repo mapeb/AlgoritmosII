@@ -169,7 +169,10 @@ public class Query
 		String nombre=metodo.getName();
 		return nombre.substring(0,3).equals(prefijo);
 	}
-
+//SETEA LAS VARIABLES USANDO REFLECTION EN EL RESULT SET PARA TENER LOS GETTERS PRIMITIVOS
+	//SI CAMPO A SETTEAR NO ES PRIMITIVO, HACE RECURSIVIDAD SOBRE EL SETTEO DE OBJETOS 
+	//AL SER UNA CLASE Y UNA TABLA DIFERENTE Y LE SETTEA A LA CLASE PRINCIPAL 
+	// LA CLASE SECUNDARIA EN SU ATRIBUTO
 	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
@@ -266,7 +269,8 @@ public class Query
 		}
 		return atributo;
 	}
-
+//OBTIENE LAS VARIABLES DE LA CLASE RELACIONADAS AL WHERE. EN EL CASO DE QUE LA VARIABLE
+	//SEA DE OTRA TABLA, SE OBTIENE ESA SEGUNDA TABLA Y SE VERIFICA QUE ESTE EL CAMPO BUSCADO.
 	public <T> ArrayList<String> obtenerVariablesDesdeAnotaciones(Class<T> dtoClass)
 	{
 		ArrayList<String> variables=new ArrayList<String>();
@@ -317,6 +321,8 @@ public class Query
 
 	}
 
+	// BUSCA LOS SETTERS DE CADA CAMPO Y LOS INVOCA CON REFLECTION AL ENCONTRAR EL CAMPO 
+	// PERTINENTE
 	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
@@ -339,7 +345,8 @@ public class Query
 
 		}
 	}
-
+	// BUSCA EN LOS DISTINTOS ATRIBUTOS DE LA CLASE AQUELLOS QUE NO SON PRIMITIVOS Y REPRESENTAN
+	// UNA TABLA, PARA LUEGO BUSCAR EL CAMPO INVOLUCRADO EN EL WHERE EN ESA TABLA Y DEVOLVER EL TIPO DE DATO
 	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException,SecurityException
 	{
 		Field[] camposClasePrincipal=dtoClass.getDeclaredFields();
@@ -358,6 +365,7 @@ public class Query
 
 	}
 
+	//OBTIENE LAS VARIABLES IMPLICADAS EN EL WHERE Y LAS SETEA EN LA QUERY A TRAVES DEL PSTM
 	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass)
 			throws NoSuchFieldException,SecurityException,IllegalAccessException,IllegalArgumentException,InvocationTargetException
 	{
@@ -383,6 +391,8 @@ public class Query
 			{
 				try
 				{
+					//VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA CLASE QUE TIENE
+					//COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
 					dtoClass.getDeclaredField(variable);
 
 				}
@@ -401,7 +411,9 @@ public class Query
 					if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)||obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo))
 							||(obtenerAtributoDelSetterOGetter(setter).equals("Int")&&tipo.equals("Integer")))
 					{
+						// SETEA SEGUN EL SETTER PERTINENTE DEL PSTM
 						setter.invoke(pstm,i+1,args[i]);
+						
 						i++;
 						break;
 					}
