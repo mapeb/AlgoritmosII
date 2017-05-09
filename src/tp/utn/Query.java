@@ -20,13 +20,13 @@ import tp.utn.ann.Column;
 import tp.utn.ann.Id;
 import tp.utn.ann.Table;
 import tp.utn.main.SingletonConexion;
-import tp.utn.main.ValorDiccionario;
+
 
 public class Query
 {
 	List<String> select;
 	String from;
-	ArrayList<String> anotacionesVariables=new ArrayList<String>();
+	ArrayList<String> variablesDeXql=new ArrayList<String>();
 
 	public Query(String from)
 	{
@@ -276,7 +276,7 @@ public class Query
 		ArrayList<String> variables=new ArrayList<String>();
 		Field[] campos=dtoClass.getDeclaredFields();
 		ArrayList<String> anotacionesDeOtraClase=new ArrayList<String>();
-		for(String anotacion:anotacionesVariables)
+		for(String anotacion:variablesDeXql)
 		{
 			if(getTabla(anotacion).equals(dtoClass.getAnnotation(Table.class).name()))
 			{
@@ -365,61 +365,74 @@ public class Query
 
 	}
 
+	public void obtenerVariablesDeXql(String xql)
+	{
+		String nuevaPalabra=null;
+		String[] palabras=xql.split(" ");
+		for(String palabra:palabras)
+		{
+			if(palabra.substring(0,1).equals("$"))
+			{
+				palabra=palabra.substring(1);
+				variablesDeXql.add(palabra);
+			}
+		}
+	}
+	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, Class dtoClass, PreparedStatement pstm, Object[] args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException
+	{
+		
+		Method[] metodos=pstm.getClass().getDeclaredMethods();
+		ArrayList<Method> setters=obtenerSettersOGetters(metodos,"set");
+		
+		String tipo=null;
+		int i=0;
+		boolean esVariableDeLaClase=true;
+		
+		for(String variable:variablesDelWhere)
+		{
+			try
+			{
+				//VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA CLASE QUE TIENE
+				//COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
+				dtoClass.getDeclaredField(variable);
+
+			}
+			catch(NoSuchFieldException ex)
+			{
+				tipo=obtenerTipoCampoDeOtraClase(dtoClass,variable);
+				esVariableDeLaClase=false;
+			}
+			if(esVariableDeLaClase)
+			{
+				Field campo=dtoClass.getDeclaredField(variable);
+				tipo=campo.getType().getSimpleName();
+			}
+			for(Method setter:setters)
+			{
+				if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)||obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo))
+						||(obtenerAtributoDelSetterOGetter(setter).equals("Int")&&tipo.equals("Integer")))
+				{
+					// SETEA SEGUN EL SETTER PERTINENTE DEL PSTM
+					setter.invoke(pstm,i+1,args[i]);
+					
+					i++;
+					break;
+				}
+			}
+
+		}
+	}
 	//OBTIENE LAS VARIABLES IMPLICADAS EN EL WHERE Y LAS SETEA EN LA QUERY A TRAVES DEL PSTM
 	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass)
 			throws NoSuchFieldException,SecurityException,IllegalAccessException,IllegalArgumentException,InvocationTargetException
 	{
 		try
 		{
-			String nuevaPalabra=null;
-			String[] palabras=xql.split(" ");
-			for(String palabra:palabras)
-			{
-				if(palabra.substring(0,1).equals("$"))
-				{
-					palabra=palabra.substring(1);
-					anotacionesVariables.add(palabra);
-				}
-			}
-			ArrayList<String> variables=obtenerVariablesDesdeAnotaciones(dtoClass);
-			Method[] metodos=pstm.getClass().getDeclaredMethods();
-			ArrayList<Method> setters=obtenerSettersOGetters(metodos,"set");
-			int i=0;
-			boolean esVariableDeLaClase=true;
-			String tipo=null;
-			for(String variable:variables)
-			{
-				try
-				{
-					//VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA CLASE QUE TIENE
-					//COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
-					dtoClass.getDeclaredField(variable);
-
-				}
-				catch(NoSuchFieldException ex)
-				{
-					tipo=obtenerTipoCampoDeOtraClase(dtoClass,variable);
-					esVariableDeLaClase=false;
-				}
-				if(esVariableDeLaClase)
-				{
-					Field campo=dtoClass.getDeclaredField(variable);
-					tipo=campo.getType().getSimpleName();
-				}
-				for(Method setter:setters)
-				{
-					if(obtenerAtributoDelSetterOGetter(setter).equals(tipo)||obtenerAtributoDelSetterOGetter(setter).equals(stringMayuscula(tipo))
-							||(obtenerAtributoDelSetterOGetter(setter).equals("Int")&&tipo.equals("Integer")))
-					{
-						// SETEA SEGUN EL SETTER PERTINENTE DEL PSTM
-						setter.invoke(pstm,i+1,args[i]);
-						
-						i++;
-						break;
-					}
-				}
-
-			}
+			
+			obtenerVariablesDeXql(xql);
+			ArrayList<String> variablesDelWhere=obtenerVariablesDesdeAnotaciones(dtoClass);
+			settearVariablesALaQuery(variablesDelWhere, dtoClass, pstm, args);
+			
 		}
 		catch(Exception ex)
 		{
@@ -441,7 +454,6 @@ public class Query
 			String sql=query;
 			pstm=con.prepareStatement(sql);
 			agregarCondicion(xql,pstm,args,dtoClass);
-			// pstm.setString(1,(String)args[0]);
 			rs=pstm.executeQuery();
 
 			Constructor<?> constructor=obtenerConstructor(dtoClass);
