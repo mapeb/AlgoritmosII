@@ -22,9 +22,7 @@ public class Utn {
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		Field[] campos = dtoClass.getDeclaredFields();
 		
-
 		query.generarQuery(campos, dtoClass);
-		
 		return query.generarString(xql);
 	}
 
@@ -32,9 +30,9 @@ public class Utn {
 	// Retorna: una lista de objetos de tipo T
 	// EJ: query(con,dtoClass,"$nombre  LIKE 'P%'") Donde $ indica variable de la clase.
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
-		Query miQ = new Query();
+		DataBaseConnection connection = new DataBaseConnection(con);
 		String query = _query(dtoClass, xql);
-		return miQ.obtenerObjetosDeBD(con, dtoClass,query,args, xql);
+		return connection.getObjetosDeBD(dtoClass,query,args, xql);
 		
 	}
 
