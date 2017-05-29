@@ -35,11 +35,6 @@ public class Query
 
 	}
 
-	public Query()
-	{
-		super();
-	}
-
 	public void generarQuery(Field[] campos, Class<?> dtoClass)
 	{
 		for(Field campo:campos)
@@ -82,32 +77,27 @@ public class Query
 
 	public void addAttr(Class<?> claseContenedora, String atrr)
 	{
-		String newAtrr=nombreTabla(claseContenedora)+"."+atrr;
+		String newAtrr=Annotation.getNameTable(claseContenedora)+"."+atrr;
 		this.getSelect().add(newAtrr);
 	}
 
 	public void addJoin(Class<?> claseRaiz, Field campo)
 	{
 		// Table tabla2 = (Table) clase2.getAnnotation(Table.class);
-		from+=" JOIN "+nombreTabla(campo.getType())+joinDeTablas(claseRaiz,campo);
+		from+=" JOIN "+Annotation.getNameTable(campo.getType())+joinDeTablas(claseRaiz,campo);
 	}
 
 	private String joinDeTablas(Class<?> campoSolicitante, Field campoSolicitado)
 	{
-		String comparacion=" ON ( "+nombreTabla(campoSolicitante);
+		String comparacion=" ON ( "+Annotation.getNameTable(campoSolicitante);
 		comparacion+="."+campoSolicitado.getAnnotation(Column.class).name()+" = ";
-		comparacion+=nombreTabla(campoSolicitado.getType())+".";
+		comparacion+=Annotation.getNameTable(campoSolicitado.getType())+".";
 
 		for(Field field:campoSolicitado.getType().getDeclaredFields())
 		{
 			if(field.getAnnotation(Id.class)!=null) return comparacion+field.getAnnotation(Column.class).name()+" )";
 		}
 		return ""; // Hola si la funcion no tiene id debo explotar, ya se .
-	}
-
-	public static String nombreTabla(Class<?> clase)
-	{
-		return ((Table)clase.getAnnotation(Table.class)).name();
 	}
 
 	public List<String> getSelect()

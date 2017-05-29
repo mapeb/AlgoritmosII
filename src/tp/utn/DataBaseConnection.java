@@ -17,7 +17,7 @@ import tp.utn.ann.Table;
 public class DataBaseConnection {
 	
 	Connection connection;
-	ArrayList<String> variablesDeXql=new ArrayList<String>();
+	ArrayList<String> variablesXql=new ArrayList<String>();
 	
 	public DataBaseConnection(Connection connection) {
 		super();
@@ -27,8 +27,6 @@ public class DataBaseConnection {
 	public Connection getConnection() {
 		return connection;
 	}
-
-
 
 	public <T> List<T> getObjetosDeBD(Class<?> dtoClass, String query, Object[] args, String xql)
 	{
@@ -149,7 +147,7 @@ public class DataBaseConnection {
 
 	public String nombreAtributoEnTabla(Class dtoClass, Field campo)
 	{
-		return Query.nombreTabla(dtoClass)+"."+campo.getAnnotation(Column.class).name();
+		return Annotation.getNameTable(dtoClass)+"."+Annotation.getNameField(campo);
 	}
 
 	public String getTabla(String anotacionSQL)// ej: persona.id_persona
@@ -175,20 +173,17 @@ public class DataBaseConnection {
 	
 	//OBTIENE LAS VARIABLES DE LA CLASE RELACIONADAS AL WHERE. EN EL CASO DE QUE LA VARIABLE
 	//SEA DE OTRA TABLA, SE OBTIENE ESA SEGUNDA TABLA Y SE VERIFICA QUE ESTE EL CAMPO BUSCADO.
-	public <T> ArrayList<String> obtenerVariablesDesdeAnotaciones(Class<T> dtoClass)
+	public <T> ArrayList<String> getVariablesValue(Class<T> dtoClass)
 	{
 		ArrayList<String> variables=new ArrayList<String>();
-		Field[] campos=dtoClass.getDeclaredFields();
-		ArrayList<String> anotacionesDeOtraClase=new ArrayList<String>();
-		for(String anotacion:variablesDeXql)
+		for(String anotacion:variablesXql)
 		{
-			if(getTabla(anotacion).equals(dtoClass.getAnnotation(Table.class).name()))
+			if(getTabla(anotacion).equals(Annotation.getNameTable(dtoClass)))
 			{
-
 				anotacion=sacarTabla(anotacion);
-				for(Field campo:campos)
+				for(Field campo:dtoClass.getDeclaredFields())
 				{
-					if(campo.getAnnotation(Column.class).name().equals(anotacion))
+					if(Annotation.getNameField(campo).equals(anotacion))
 					{
 						variables.add(campo.getName());
 						break;
@@ -198,15 +193,14 @@ public class DataBaseConnection {
 			else
 			{
 				int i=0;
-				for(Field campito : campos)
+				for(Field campito : dtoClass.getDeclaredFields())
 				{
-					if(!Reflection.isPrimitiveClass(campito) && getTabla(anotacion).equals(campito.getType().getAnnotation(Table.class).name()))
+					if(!Reflection.isPrimitiveClass(campito) && getTabla(anotacion).equals(Annotation.getNameTable(campito.getType())))
 					{
 						anotacion = sacarTabla(anotacion);
-						Field[] camposSegundaClase = campito.getType().getDeclaredFields();
-						for(Field campoSegunda : camposSegundaClase)
+						for(Field campoSegunda : campito.getType().getDeclaredFields())
 						{
-							if(campoSegunda.getAnnotation(Column.class).name().equals(anotacion))
+							if(Annotation.getNameField(campoSegunda).equals(anotacion))
 							{
 								variables.add(campoSegunda.getName());
 								i=1;
@@ -227,17 +221,13 @@ public class DataBaseConnection {
 	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
-		Field[] campos=dtoClass.getDeclaredFields();
-		Method metodos[]=dtoClass.getDeclaredMethods();
-		ArrayList<Method> setters=Reflection.getGettersSetters(metodos,"set");
-
-		for(Method setter:setters)
+		for(Method setter:Reflection.getGettersSetters(dtoClass.getDeclaredMethods(),"set"))
 		{
 			String atributoSetter=Reflection.getAtributoDelSetterOGetter(setter);
 			atributoSetter=stringMinuscula(atributoSetter);
-			for(Field campo:campos)
+			for(Field campo:dtoClass.getDeclaredFields())
 			{
-				if(campo.getName().equals(atributoSetter)&&campo.getAnnotation(Column.class)!=null)
+				if(campo.getName().equals(atributoSetter)&&Annotation.getNameField(campo)!=null)
 				{
 					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
 					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
@@ -266,16 +256,13 @@ public class DataBaseConnection {
 
 	}
 
-	public void obtenerVariablesDeXql(String xql)
+	public void setVariablesXql(String xql)
 	{
 		String[] palabras=xql.split(" ");
 		for(String palabra:palabras)
 		{
 			if(palabra.substring(0,1).equals("$"))
-			{
-				palabra=palabra.substring(1);
-				variablesDeXql.add(palabra);
-			}
+				variablesXql.add(palabra.substring(1));
 		}
 	}
 	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, Class dtoClass, PreparedStatement pstm, Object[] args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException
@@ -327,8 +314,8 @@ public class DataBaseConnection {
 	{
 		try
 		{
-			obtenerVariablesDeXql(xql);
-			settearVariablesALaQuery(obtenerVariablesDesdeAnotaciones(dtoClass), dtoClass, pstm, args);
+			setVariablesXql(xql);
+			settearVariablesALaQuery(getVariablesValue(dtoClass), dtoClass, pstm, args);
 			
 		}
 		catch(Exception ex)
