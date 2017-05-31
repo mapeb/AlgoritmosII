@@ -9,32 +9,34 @@ import tp.utn.ann.Id;
 import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
 
-@Table(name="x_carrera")
-public class Carrera
+@Table(name="x_turno")
+public class Turno
 {
 	@Id(strategy=Id.IDENTITY)
-	@Column(name="id_carrera")
-	private Integer idCarrera;
+	@Column(name="id_turno")
+	private Integer idTurno;
 
 	@Column(name="descripcion")
 	private String descripcion;
-	
-	public Integer getIdCarrera()
+
+	public Integer getIdTurno()
 	{
-		return idCarrera;
+		return idTurno;
 	}
-	public void setIdCarrera(Integer idCarrera)
+
+	public void setIdTurno(Integer idTurno)
 	{
-		this.idCarrera = idCarrera;
+		this.idTurno = idTurno;
 	}
+
 	public String getDescripcion()
 	{
 		return descripcion;
 	}
+
 	public void setDescripcion(String descripcion)
 	{
 		this.descripcion = descripcion;
 	}
-	
-	
+
 }

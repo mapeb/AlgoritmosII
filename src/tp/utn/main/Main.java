@@ -40,17 +40,17 @@ public class Main
 		Method metodo = lista.get(i).getClass().getMethod("getNombre",null);
 		Object objeto = lista.get(i);
 		Method metodo2 = objeto.getClass().getMethod("getIdPersona",null);
-		System.out.println(metodo.invoke(objeto,null) + " ," + metodo2.invoke(objeto,null));
+		System.out.println("Nombre: " + metodo.invoke(objeto,null) + " , id Persona = " + metodo2.invoke(objeto,null));
 		Method metodo3 = objeto.getClass().getMethod("getDireccion",null);
 		Direccion direccionJuani = (Direccion) metodo3.invoke(objeto,null);
-		System.out.println(direccionJuani.getCalle());
-		System.out.println(direccionJuani.getNumero());
+		System.out.print("Calle: " + direccionJuani.getCalle());
+		System.out.println(", Numero: " + direccionJuani.getNumero());
 		Method metodoOcupacion = objeto.getClass().getMethod("getOcupacion",null);
 		Ocupacion ocupacionJuani = (Ocupacion) metodoOcupacion.invoke(objeto,null);
-		System.out.println(ocupacionJuani.getDescripcion());
+		System.out.print("Ocupacion: " + ocupacionJuani.getDescripcion());
 		Method metodoTipoOcupacion = ocupacionJuani.getClass().getMethod("getTipoOcupacion",null);
 		TipoOcupacion tipoJuani = (TipoOcupacion) metodoTipoOcupacion.invoke(ocupacionJuani,null);
-		System.out.println(tipoJuani.getDescripcion());
+		System.out.println(", Descripcion: " + tipoJuani.getDescripcion());
 			}
 			i++;
 		}

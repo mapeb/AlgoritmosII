@@ -17,16 +17,19 @@ import tp.utn.ann.Column;
 import tp.utn.ann.Table;
 import tp.utn.demo.domain.*;
 import tp.utn.domain.Alumno;
+import tp.utn.domain.Curso;
 
 public class MainDominio
 {
 	public static <T> void main(String[] args) throws SQLException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-
-		 String query = Utn._query(Alumno.class,"where legajo = ?");
+		
+		
+		
+		 String query = Utn._query(Alumno.class,"where $id_alumno = ?");
 		 System.out.println(query);
 		 
-		List<T> lista = (List<T>) Utn.query(SingletonConexion.getConnection(),Alumno.class,"where $x_alumno.legajo = ?", 1010);
+		List<T> lista = (List<T>) Utn.query(SingletonConexion.getConnection(),Alumno.class,"where $x_alumno.id_alumno = ?", 1);
 		
 		System.out.println(lista.size());
 		int i = 0;
