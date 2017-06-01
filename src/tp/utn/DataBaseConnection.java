@@ -146,7 +146,7 @@ public class DataBaseConnection extends Xql
 
 	public String nombreAtributoEnTabla(Class dtoClass, Field campo)
 	{
-		return Annotation.getTableName(dtoClass)+"."+Annotation.getAnnotationName(campo);
+		return Annotation.getTableName(dtoClass)+"."+Annotation.getAnnotationFieldName(campo);
 	}
 
 
@@ -164,7 +164,7 @@ public class DataBaseConnection extends Xql
 		{
 			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
 			{
-				atributo=sacarNombreClase(atributo);
+				atributo=getAtributoSinNombreClase(atributo);
 				for(Field campo:dtoClass.getDeclaredFields())
 				{
 					if(campo.getName().equals(atributo))
@@ -181,7 +181,7 @@ public class DataBaseConnection extends Xql
 				{
 					if(!Reflection.isPrimitiveClass(campito)&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
 					{
-						atributo=sacarNombreClase(atributo);
+						atributo=getAtributoSinNombreClase(atributo);
 						for(Field campoSegunda:campito.getType().getDeclaredFields())
 						{
 							if(campoSegunda.getName().equals(atributo))
@@ -213,7 +213,7 @@ public class DataBaseConnection extends Xql
 			atributoSetter=stringMinuscula(atributoSetter);
 			for(Field campo:dtoClass.getDeclaredFields())
 			{
-				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationName(campo)!=null)
+				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationFieldName(campo)!=null)
 				{
 					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
 					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
@@ -249,7 +249,7 @@ public class DataBaseConnection extends Xql
 
 		Method[] metodos=pstm.getClass().getDeclaredMethods();
 		ArrayList<Method> setters=Reflection.getGettersSetters(metodos,"set");
-
+		
 		String tipo=null;
 		int i=0;
 		boolean esVariableDeLaClase=true;

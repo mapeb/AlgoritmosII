@@ -22,7 +22,7 @@ public class Main
 
 	public static void main(String[] args)
 	{
-			List<Persona> lista = (List<Persona>) Utn.query(SingletonConexion.getConnection(),Persona.class,"where $persona.nombre = ? AND $direccion.numero = ? AND $persona.idPersona = ?","Juani", 567,6);
+			List<Persona> lista = (List<Persona>) Utn.query(SingletonConexion.getConnection(),Persona.class,"where $direccion.calle = ?","CALLE FALSA");
 			
 			for(Persona per : lista)
 			{

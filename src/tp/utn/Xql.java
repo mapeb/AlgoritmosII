@@ -33,7 +33,7 @@ public class Xql
 			if(palabra.substring(0,1).equals("$")) variablesXql.add(palabra.substring(1));
 		}
 	}
-	public String sacarNombreClase(String anotacionSQL)
+	public String getAtributoSinNombreClase(String anotacionSQL)
 	{
 		if(anotacionSQL.contains("."))
 		{

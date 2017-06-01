@@ -72,7 +72,7 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 {
 	
 	String[] modificacion = condicionOrdenada.split(" ");
-	String nombreEnTabla = Annotation.getAnnotationName(campo);
+	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
 	String reemplazo = "$"+stringMinuscula(dtoClass.getSimpleName())+"."+nombreEnTabla;
 	String aModificar = null;
 	for(String modif : modificacion)
@@ -90,7 +90,7 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		setVariablesXql(xql);
 		condicionOrdenada = xql;
 		ArrayList<String> variables=new ArrayList<String>();
-		String modificacion="";
+		String modificacion=xql;
 		for(String atributo : variablesXql)
 		{
 			
@@ -98,8 +98,8 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 			{
 				for(Field campo:dtoClass.getDeclaredFields())
 				{
-					if(campo.getName().equals(sacarNombreClase(atributo))
-							&& !(Annotation.getAnnotationName(campo).equals(sacarNombreClase(atributo))))
+					if(campo.getName().equals(getAtributoSinNombreClase(atributo))
+							&& !(Annotation.getAnnotationFieldName(campo).equals(getAtributoSinNombreClase(atributo))))
 					{
 						modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, atributo);
 					}
@@ -116,10 +116,10 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 						
 						for(Field campoSegunda:campito.getType().getDeclaredFields())
 						{
-							if(campoSegunda.getName().equals(sacarNombreClase(atributo))
-									&& !(Annotation.getAnnotationName(campoSegunda).equals(sacarNombreClase(atributo))))
+							if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo))
+									&& !(Annotation.getAnnotationFieldName(campoSegunda).equals(getAtributoSinNombreClase(atributo))))
 							{
-								modificacion += cambiarAtributoPorNombreEnTabla(campoSegunda,dtoClass, atributo);
+								modificacion = cambiarAtributoPorNombreEnTabla(campoSegunda,dtoClass, atributo);
 								i=1;
 								break;
 							}
@@ -131,20 +131,22 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		}
 		return modificacion;
 	}
-	public String getVariablesRealDeTabla(String xql, Class dtoClass)
+	public String getAtributosRealesDeTabla(String xql, Class dtoClass)
 	{
-		String xqlPosta = modificarAtributosClaseAFilasTabla(xql, dtoClass);
-		return sacarPesos(xqlPosta);
+		String xqlConFilasDeTabla = modificarAtributosClaseAFilasTabla(xql, dtoClass);
+		return sacarPesos(xqlConFilasDeTabla);
 		
 	}
 	public String generarString(String xql, Class dtoClass)
 	{
-		String xqlLimpio=getVariablesRealDeTabla(xql, dtoClass);
+		String xqlFinal="";
+		if(!xql.equals(""))
+		xqlFinal =getAtributosRealesDeTabla(xql, dtoClass);
 		String q="SELECT ";
 		for(String attr:this.getSelect())
 			q+=attr+",";
 		q=q.substring(0,q.length()-1);
-		q+=" FROM "+from+" "+xqlLimpio;
+		q+=" FROM "+from+" "+xqlFinal;
 		return q;
 	}
 

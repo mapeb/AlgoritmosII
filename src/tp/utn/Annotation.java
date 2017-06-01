@@ -13,7 +13,7 @@ public class Annotation {
 		return ((Table)clase.getAnnotation(Table.class)).name();
 	}
 	
-	public static String getAnnotationName(Field campo)
+	public static String getAnnotationFieldName(Field campo)
 	{
 		return (campo.getAnnotation(Column.class)).name();
 	}
