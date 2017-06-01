@@ -8,12 +8,12 @@ import tp.utn.ann.Table;
 public class Annotation {
 	
 	
-	public static String getNameTable(Class<?> clase)
+	public static String getTableName(Class<?> clase)
 	{
 		return ((Table)clase.getAnnotation(Table.class)).name();
 	}
 	
-	public static String getNameField(Field campo)
+	public static String getAnnotationName(Field campo)
 	{
 		return (campo.getAnnotation(Column.class)).name();
 	}

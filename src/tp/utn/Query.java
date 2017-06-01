@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 //import java.util.HashMap;
 //import java.util.Iterator;
 import java.util.List;
@@ -22,10 +23,12 @@ import tp.utn.ann.Table;
 //import tp.utn.main.SingletonConexion;
 
 
-public class Query
+public class Query extends Xql
 {
 	List<String> select;
 	String from;
+	private static String condicionOrdenada;
+
 
 	public Query(String from)
 	{
@@ -53,6 +56,7 @@ public class Query
 		}
 	}
 
+	
 	public String sacarPesos(String frase)
 	{
 		StringBuffer cadena=new StringBuffer();
@@ -64,9 +68,78 @@ public class Query
 		return cadena.toString();
 	}
 
-	public String generarString(String xql)
+public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, String atributo)
+{
+	
+	String[] modificacion = condicionOrdenada.split(" ");
+	String nombreEnTabla = Annotation.getAnnotationName(campo);
+	String reemplazo = "$"+stringMinuscula(dtoClass.getSimpleName())+"."+nombreEnTabla;
+	String aModificar = null;
+	for(String modif : modificacion)
 	{
-		String xqlLimpio=sacarPesos(xql);
+		if(modif.equals("$"+atributo))
+		{
+		 aModificar = modif;
+		break;
+		}
+	}
+	return condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
+}
+	public String modificarAtributosClaseAFilasTabla(String xql, Class dtoClass)
+	{
+		setVariablesXql(xql);
+		condicionOrdenada = xql;
+		ArrayList<String> variables=new ArrayList<String>();
+		String modificacion="";
+		for(String atributo : variablesXql)
+		{
+			
+			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
+			{
+				for(Field campo:dtoClass.getDeclaredFields())
+				{
+					if(campo.getName().equals(sacarNombreClase(atributo))
+							&& !(Annotation.getAnnotationName(campo).equals(sacarNombreClase(atributo))))
+					{
+						modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, atributo);
+					}
+				}
+			}
+			else
+			{
+				int i=0;
+				for(Field campito:dtoClass.getDeclaredFields())
+				{
+					
+					if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
+					{
+						
+						for(Field campoSegunda:campito.getType().getDeclaredFields())
+						{
+							if(campoSegunda.getName().equals(sacarNombreClase(atributo))
+									&& !(Annotation.getAnnotationName(campoSegunda).equals(sacarNombreClase(atributo))))
+							{
+								modificacion += cambiarAtributoPorNombreEnTabla(campoSegunda,dtoClass, atributo);
+								i=1;
+								break;
+							}
+						}
+					}
+					if(i==1) break;
+				}
+			}
+		}
+		return modificacion;
+	}
+	public String getVariablesRealDeTabla(String xql, Class dtoClass)
+	{
+		String xqlPosta = modificarAtributosClaseAFilasTabla(xql, dtoClass);
+		return sacarPesos(xqlPosta);
+		
+	}
+	public String generarString(String xql, Class dtoClass)
+	{
+		String xqlLimpio=getVariablesRealDeTabla(xql, dtoClass);
 		String q="SELECT ";
 		for(String attr:this.getSelect())
 			q+=attr+",";
@@ -77,21 +150,21 @@ public class Query
 
 	public void addAttr(Class<?> claseContenedora, String atrr)
 	{
-		String newAtrr=Annotation.getNameTable(claseContenedora)+"."+atrr;
+		String newAtrr=Annotation.getTableName(claseContenedora)+"."+atrr;
 		this.getSelect().add(newAtrr);
 	}
 
 	public void addJoin(Class<?> claseRaiz, Field campo)
 	{
 		// Table tabla2 = (Table) clase2.getAnnotation(Table.class);
-		from+=" JOIN "+Annotation.getNameTable(campo.getType())+joinDeTablas(claseRaiz,campo);
+		from+=" JOIN "+Annotation.getTableName(campo.getType())+joinDeTablas(claseRaiz,campo);
 	}
 
 	private String joinDeTablas(Class<?> campoSolicitante, Field campoSolicitado)
 	{
-		String comparacion=" ON ( "+Annotation.getNameTable(campoSolicitante);
+		String comparacion=" ON ( "+Annotation.getTableName(campoSolicitante);
 		comparacion+="."+campoSolicitado.getAnnotation(Column.class).name()+" = ";
-		comparacion+=Annotation.getNameTable(campoSolicitado.getType())+".";
+		comparacion+=Annotation.getTableName(campoSolicitado.getType())+".";
 
 		for(Field field:campoSolicitado.getType().getDeclaredFields())
 		{

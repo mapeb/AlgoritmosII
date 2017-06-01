@@ -23,7 +23,7 @@ public class Utn {
 		Field[] campos = dtoClass.getDeclaredFields();
 		
 		query.generarQuery(campos, dtoClass);
-		return query.generarString(xql);
+		return query.generarString(xql, dtoClass);
 	}
 
 	// Invoca a: _query para obtener el SQL que se debe ejecutar

@@ -14,17 +14,20 @@ import java.util.List;
 import tp.utn.ann.Column;
 import tp.utn.ann.Table;
 
-public class DataBaseConnection {
-	
+public class DataBaseConnection extends Xql
+{
+
 	Connection connection;
-	ArrayList<String> variablesXql=new ArrayList<String>();
-	
-	public DataBaseConnection(Connection connection) {
+
+
+	public DataBaseConnection(Connection connection)
+	{
 		super();
-		this.connection = connection;
+		this.connection=connection;
 	}
-	
-	public Connection getConnection() {
+
+	public Connection getConnection()
+	{
 		return connection;
 	}
 
@@ -32,6 +35,7 @@ public class DataBaseConnection {
 	{
 		PreparedStatement pstm=null;
 		ResultSet rs=null;
+
 		try
 		{
 			pstm=this.getConnection().prepareStatement(query);
@@ -69,18 +73,12 @@ public class DataBaseConnection {
 		}
 	}
 
-	public String stringMinuscula(String palabra)
-	{
-		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
-	}
 
-	public String stringMayuscula(String palabra)
-	{
-		return (palabra.substring(0,1).toUpperCase()+palabra.substring(1));
-	}
 
-	public Method buscarSetterHijoAPadre(Object hijo, Object padre) // Confio en ti hermano.
+	public Method buscarSetterHijoAPadre(Object hijo, Object padre) // Confio en
+																	// ti
+																	// hermano.
 	{
 		Method metodosPadre[]=padre.getClass().getDeclaredMethods();
 		ArrayList<Method> settersPadre=Reflection.getGettersSetters(metodosPadre,"set");
@@ -91,9 +89,11 @@ public class DataBaseConnection {
 		return null;
 	}
 
-	//SETEA LAS VARIABLES USANDO REFLECTION EN EL RESULT SET PARA TENER LOS GETTERS PRIMITIVOS
-	//SI CAMPO A SETTEAR NO ES PRIMITIVO, HACE RECURSIVIDAD SOBRE EL SETTEO DE OBJETOS 
-	//AL SER UNA CLASE Y UNA TABLA DIFERENTE Y LE SETTEA A LA CLASE PRINCIPAL 
+	// SETEA LAS VARIABLES USANDO REFLECTION EN EL RESULT SET PARA TENER LOS
+	// GETTERS PRIMITIVOS
+	// SI CAMPO A SETTEAR NO ES PRIMITIVO, HACE RECURSIVIDAD SOBRE EL SETTEO DE
+	// OBJETOS
+	// AL SER UNA CLASE Y UNA TABLA DIFERENTE Y LE SETTEA A LA CLASE PRINCIPAL
 	// LA CLASE SECUNDARIA EN SU ATRIBUTO
 	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
@@ -112,7 +112,7 @@ public class DataBaseConnection {
 
 					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
 					settearObjeto.invoke(objeto,objetoCampo);
-					listaObjetos.add((T)objetoCampo);
+					// listaObjetos.add((T)objetoCampo);
 
 				}
 				else
@@ -122,7 +122,6 @@ public class DataBaseConnection {
 					{
 						String tipoClase;
 						String tipoClaseMin;
-						int valorInt;
 						if(Reflection.esUnSetterOGetter(metodo,"get"))
 						{
 							tipoClase=metodo.getName().substring(3);
@@ -147,43 +146,28 @@ public class DataBaseConnection {
 
 	public String nombreAtributoEnTabla(Class dtoClass, Field campo)
 	{
-		return Annotation.getNameTable(dtoClass)+"."+Annotation.getNameField(campo);
+		return Annotation.getTableName(dtoClass)+"."+Annotation.getAnnotationName(campo);
 	}
 
-	public String getTabla(String anotacionSQL)// ej: persona.id_persona
-	{
-		if(anotacionSQL.contains("."))
-		{
-			String[] division=anotacionSQL.split("\\.");
-			return division[0];
-		}
-		return "";
-	}
 
-	public String sacarTabla(String anotacionSQL)
-	{
-		if(anotacionSQL.contains("."))
-		{
 
-			String[] division=anotacionSQL.split("\\.");
-			return division[1];
-		}
-		return "";
-	}
 	
-	//OBTIENE LAS VARIABLES DE LA CLASE RELACIONADAS AL WHERE. EN EL CASO DE QUE LA VARIABLE
-	//SEA DE OTRA TABLA, SE OBTIENE ESA SEGUNDA TABLA Y SE VERIFICA QUE ESTE EL CAMPO BUSCADO.
-	public <T> ArrayList<String> getVariablesValue(Class<T> dtoClass)
+
+	// OBTIENE LAS VARIABLES DE LA CLASE RELACIONADAS AL WHERE. EN EL CASO DE
+	// QUE LA VARIABLE
+	// SEA DE OTRA TABLA, SE OBTIENE ESA SEGUNDA TABLA Y SE VERIFICA QUE ESTE EL
+	// CAMPO BUSCADO.
+	public <T> ArrayList<String> getVariablesDelWhere(Class<T> dtoClass)
 	{
 		ArrayList<String> variables=new ArrayList<String>();
-		for(String anotacion:variablesXql)
+		for(String atributo:variablesXql)
 		{
-			if(getTabla(anotacion).equals(Annotation.getNameTable(dtoClass)))
+			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
 			{
-				anotacion=sacarTabla(anotacion);
+				atributo=sacarNombreClase(atributo);
 				for(Field campo:dtoClass.getDeclaredFields())
 				{
-					if(Annotation.getNameField(campo).equals(anotacion))
+					if(campo.getName().equals(atributo))
 					{
 						variables.add(campo.getName());
 						break;
@@ -193,14 +177,14 @@ public class DataBaseConnection {
 			else
 			{
 				int i=0;
-				for(Field campito : dtoClass.getDeclaredFields())
+				for(Field campito:dtoClass.getDeclaredFields())
 				{
-					if(!Reflection.isPrimitiveClass(campito) && getTabla(anotacion).equals(Annotation.getNameTable(campito.getType())))
+					if(!Reflection.isPrimitiveClass(campito)&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
 					{
-						anotacion = sacarTabla(anotacion);
-						for(Field campoSegunda : campito.getType().getDeclaredFields())
+						atributo=sacarNombreClase(atributo);
+						for(Field campoSegunda:campito.getType().getDeclaredFields())
 						{
-							if(Annotation.getNameField(campoSegunda).equals(anotacion))
+							if(campoSegunda.getName().equals(atributo))
 							{
 								variables.add(campoSegunda.getName());
 								i=1;
@@ -216,18 +200,20 @@ public class DataBaseConnection {
 		return variables;
 	}
 
-	// BUSCA LOS SETTERS DE CADA CAMPO Y LOS INVOCA CON REFLECTION AL ENCONTRAR EL CAMPO 
+	// BUSCA LOS SETTERS DE CADA CAMPO Y LOS INVOCA CON REFLECTION AL ENCONTRAR
+	// EL CAMPO
 	// PERTINENTE
 	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
-		for(Method setter:Reflection.getGettersSetters(dtoClass.getDeclaredMethods(),"set"))
+		ArrayList<Method> setters=Reflection.getGettersSetters(dtoClass.getDeclaredMethods(),"set");
+		for(Method setter:setters)
 		{
 			String atributoSetter=Reflection.getAtributoDelSetterOGetter(setter);
 			atributoSetter=stringMinuscula(atributoSetter);
 			for(Field campo:dtoClass.getDeclaredFields())
 			{
-				if(campo.getName().equals(atributoSetter)&&Annotation.getNameField(campo)!=null)
+				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationName(campo)!=null)
 				{
 					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
 					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
@@ -236,8 +222,11 @@ public class DataBaseConnection {
 
 		}
 	}
-	// BUSCA EN LOS DISTINTOS ATRIBUTOS DE LA CLASE AQUELLOS QUE NO SON PRIMITIVOS Y REPRESENTAN
-	// UNA TABLA, PARA LUEGO BUSCAR EL CAMPO INVOLUCRADO EN EL WHERE EN ESA TABLA Y DEVOLVER EL TIPO DE DATO
+
+	// BUSCA EN LOS DISTINTOS ATRIBUTOS DE LA CLASE AQUELLOS QUE NO SON
+	// PRIMITIVOS Y REPRESENTAN
+	// UNA TABLA, PARA LUEGO BUSCAR EL CAMPO INVOLUCRADO EN EL WHERE EN ESA
+	// TABLA Y DEVOLVER EL TIPO DE DATO
 	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException,SecurityException
 	{
 		Field[] camposClasePrincipal=dtoClass.getDeclaredFields();
@@ -245,42 +234,33 @@ public class DataBaseConnection {
 		{
 			if(!Reflection.isPrimitiveClass(campoClaseP))
 			{
-				if(campoClaseP.getType().getDeclaredField(campo)!=null)
-				{
-					Field campoSec=campoClaseP.getType().getDeclaredField(campo); // 2 veces getType (?)
+				Field campoSec=campoClaseP.getType().getDeclaredField(campo); 
+				if(campoSec!=null)
 					return campoSec.getType().getSimpleName();
-				}
 			}
 		}
 		return null;
 
 	}
 
-	public void setVariablesXql(String xql)
+	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, Class dtoClass, PreparedStatement pstm, Object[] args)
+			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,NoSuchFieldException,SecurityException
 	{
-		String[] palabras=xql.split(" ");
-		for(String palabra:palabras)
-		{
-			if(palabra.substring(0,1).equals("$"))
-				variablesXql.add(palabra.substring(1));
-		}
-	}
-	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, Class dtoClass, PreparedStatement pstm, Object[] args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchFieldException, SecurityException
-	{
-		
+
 		Method[] metodos=pstm.getClass().getDeclaredMethods();
 		ArrayList<Method> setters=Reflection.getGettersSetters(metodos,"set");
-		
+
 		String tipo=null;
 		int i=0;
 		boolean esVariableDeLaClase=true;
-		
+
 		for(String variable:variablesDelWhere)
 		{
 			try
 			{
-				//VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA CLASE QUE TIENE
-				//COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
+				// VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA
+				// CLASE QUE TIENE
+				// COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
 				dtoClass.getDeclaredField(variable);
 
 			}
@@ -296,7 +276,7 @@ public class DataBaseConnection {
 			}
 			for(Method setter:setters)
 			{
-				String attr = Reflection.getAtributoDelSetterOGetter(setter);
+				String attr=Reflection.getAtributoDelSetterOGetter(setter);
 				if(attr.equals(tipo)||attr.equals(stringMayuscula(tipo))||(attr.equals("Int")&&tipo.equals("Integer")))
 				{
 					// SETEA SEGUN EL SETTER PERTINENTE DEL PSTM
@@ -308,15 +288,17 @@ public class DataBaseConnection {
 
 		}
 	}
-	//OBTIENE LAS VARIABLES IMPLICADAS EN EL WHERE Y LAS SETEA EN LA QUERY A TRAVES DEL PSTM
+
+	// OBTIENE LAS VARIABLES IMPLICADAS EN EL WHERE Y LAS SETEA EN LA QUERY A
+	// TRAVES DEL PSTM
 	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass)
 			throws NoSuchFieldException,SecurityException,IllegalAccessException,IllegalArgumentException,InvocationTargetException
 	{
 		try
 		{
-			setVariablesXql(xql);
-			settearVariablesALaQuery(getVariablesValue(dtoClass), dtoClass, pstm, args);
-			
+			//setVariablesXql(xql);
+			settearVariablesALaQuery(getVariablesDelWhere(dtoClass),dtoClass,pstm,args);
+
 		}
 		catch(Exception ex)
 		{
