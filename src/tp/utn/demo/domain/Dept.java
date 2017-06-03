@@ -22,8 +22,9 @@ public class Dept
 	@Column(name="loc")
 	private String loc;
 	
-	@Relation(type=Emp.class, att="dept")
-	private List<Emp> emps;
+	@Relation(type=Emp.class, att="dept") // ONE TO MANY -> TYPE: TIPO DE DATO A TRAER; ATT-> ATRIBUTO
+	private List<Emp> emps;                                 // QUE ESTÁ MAPEANDO DEL OTRO LADO (DEL LADO
+                                                           //DEL ONE
 
 	// Getters and setters.
 	public Integer getDeptno()

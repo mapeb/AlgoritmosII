@@ -22,17 +22,20 @@ public class Main
 
 	public static void main(String[] args)
 	{
-			List<Persona> lista = (List<Persona>) Utn.query(SingletonConexion.getConnection(),Persona.class,"where $direccion.calle = ?","CALLE FALSA");
+			Connection con = SingletonConexion.getConnection();
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"where $direccion.calle = ?","CALLE FALSA");
 			
 			for(Persona per : lista)
 			{
+				System.out.println(per.direccion);
 				System.out.println("Nombre : " + per.getNombre());
 				System.out.println("Direccion : " + per.getDireccion());
 				System.out.print("Ocupacion : " + per.getOcupacion().getDescripcion());
 				System.out.println(" Descripcion : " + per.getOcupacion().getTipoOcupacion().getDescripcion());
-				
-			}
 			
-	}
+			}
+			Persona personaFound = Utn.find(con,Persona.class,6);
+			System.out.println("La persona es " + personaFound.getNombre());
+	} 
 
 }

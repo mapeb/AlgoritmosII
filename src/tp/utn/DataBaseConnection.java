@@ -49,6 +49,8 @@ public class DataBaseConnection extends Xql
 				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos);
 				listaObjetos.add((T)objeto);
 			}
+			if(listaObjetos.size()==0)
+				return null;
 			return listaObjetos;
 		}
 		catch(Exception ex)

@@ -29,17 +29,22 @@ public class Utn {
 	// Invoca a: _query para obtener el SQL que se debe ejecutar
 	// Retorna: una lista de objetos de tipo T
 	// EJ: query(con,dtoClass,"$nombre  LIKE 'P%'") Donde $ indica variable de la clase.
-	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xql, Object... args) {
+	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xqlWhere, Object... args) {
 		DataBaseConnection connection = new DataBaseConnection(con);
-		String query = _query(dtoClass, xql);
-		return connection.getObjetosDeBD(dtoClass,query,args, xql);
+		String query = _query(dtoClass, xqlWhere);
+		return connection.getObjetosDeBD(dtoClass,query,args, xqlWhere);
 		
 	}
 
 	// Retorna: una fila identificada por id o null si no existe
 	// Invoca a: query
-	private static <T> T find(Connection con, Class<T> dtoClass, Object id) {
-		return null;
+	public static <T> T find(Connection con, Class<T> dtoClass, Object id) {
+		String idClase = Reflection.getIdField(dtoClass);
+		String clase = dtoClass.getSimpleName();
+		String xqlWhere = "WHERE $"+clase+"."+idClase+" = ?";
+		List<T> listaObjetos = query(con, dtoClass, xqlWhere, id);
+		return listaObjetos.get(0);
+		
 	}
 
 	// Retorna: una todasa las filas de la tabla representada por dtoClass
@@ -97,10 +102,10 @@ public class Utn {
 		return 0;
 	}
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		Persona x = new Persona();
 		//x.setDireccion(new Direccion());
 		System.out.println(Utn._query(x.getClass(), " WHere edad == 2"));
-	}
+	}*/
 
 }

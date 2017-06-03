@@ -13,7 +13,18 @@ public class Reflection {
 		if((type==int.class)||(type==Integer.class)||(type==String.class)||(type==char.class)||(type==double.class)||(type==long.class)||(type==short.class)||(type==boolean.class)) return true;
 		return false;
 	}
-	
+	public static String getIdField(Class dtoClass)
+	{
+		Field[] campos = dtoClass.getDeclaredFields();
+		for(Field campo : campos)
+		{
+			
+			String prefijo = campo.getName().substring(0,2);
+			if(prefijo.equals("id") || prefijo.equals("ID"))
+			return campo.getName();
+		}
+		return null;
+	}
 	public static ArrayList<Method> getGettersSetters(Method metodos[], String prefijo)
 	{
 		ArrayList<Method> settersOGetters=new ArrayList<Method>();
