@@ -35,6 +35,7 @@ public class DataBaseConnection extends Xql
 	{
 		PreparedStatement pstm=null;
 		ResultSet rs=null;
+		Interceptor.intercept(dtoClass);
 
 		try
 		{
@@ -45,6 +46,7 @@ public class DataBaseConnection extends Xql
 			List<T> listaObjetos=new ArrayList<T>();
 			while(rs.next())
 			{
+				
 				Object objeto=Reflection.getConstructor(dtoClass).newInstance();
 				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos);
 				listaObjetos.add((T)objeto);
