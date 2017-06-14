@@ -23,7 +23,7 @@ public class Main
 	public static void main(String[] args)
 	{
 			Connection con = SingletonConexion.getConnection();
-			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"where $direccion.calle = ?","CALLE FALSA");
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"","");
 			
 			for(Persona per : lista)
 			{
@@ -34,7 +34,7 @@ public class Main
 				System.out.println(" Descripcion : " + per.getOcupacion().getTipoOcupacion().getDescripcion());
 			
 			}
-			Persona personaFound = Utn.find(con,Persona.class,6);
+			Persona personaFound = Utn.find(con,Persona.class,1);
 			System.out.println("La persona es " + personaFound.getNombre());
 	} 
 

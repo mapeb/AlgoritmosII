@@ -46,7 +46,7 @@ public class Query extends Xql
 				this.addAttr(dtoClass,campo.getAnnotation(Column.class).name());
 			else
 			{
-				if(campo.getType().getAnnotation(Table.class)!=null&&campo.getAnnotation(Column.class).fetchType()==2)
+				if(campo.getType().getAnnotation(Table.class)!=null)
 				{
 					// this.addJoin(campo, campo.getType());
 					this.addJoin(dtoClass,campo);

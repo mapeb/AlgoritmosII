@@ -217,8 +217,10 @@ public class DataBaseConnection extends Xql
 			{
 				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationFieldName(campo)!=null)
 				{
-					String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
-					settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
+					if(campo.getAnnotation(Column.class).fetchType()==2){
+						String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
+						settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
+					}
 				}
 			}
 
