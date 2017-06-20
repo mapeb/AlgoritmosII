@@ -40,7 +40,7 @@ public class Reflection {
 		return metodo.getName().substring(0,3).equals(prefijo);
 	}
 	
-	public static <T> Constructor<?> getConstructor(Class<T> dtoClass) throws NoSuchMethodException,SecurityException,ClassNotFoundException
+	public static <T> Constructor<?> getConstructor(Class<T> dtoClass) throws NoSuchMethodException, SecurityException, ClassNotFoundException 
 	{
 		return ((Class<T>)Class.forName(dtoClass.getName())).getConstructor();
 	}

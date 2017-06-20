@@ -10,7 +10,7 @@ public class Persona
 	@Column(name="id_persona")
 	private Integer idPersona;
 	
-	@Column(name="nombre")
+	@Column(name="nombre",fetchType=1)
 	private String nombre;
 
 		

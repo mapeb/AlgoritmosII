@@ -2,5 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-analysis-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-commons-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-tree-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-util-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Desktop/asm-5.2/lib/asm-xml-5.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Downloads/cglib-3.2.5.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Usuario/Downloads/hsqldb-2.4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
