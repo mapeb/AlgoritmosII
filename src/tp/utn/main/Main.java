@@ -26,7 +26,7 @@ public class Main
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException
 	{
 			Connection con = SingletonConexion.getConnection();
-			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"WHERE $Persona.idPersona = ?",6);
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"","");
 			for(Persona per : lista)
 			{
 				
@@ -38,9 +38,10 @@ public class Main
 				System.out.println(" Descripcion : " + per.getOcupacion().getTipoOcupacion().getDescripcion());
 			
 			}
-			Persona personaFound = Utn.find(con,Persona.class,6);
+			int id =6;
+			Persona personaFound = Utn.find(con,Persona.class,id);
 			
-			System.out.println("La persona es " + personaFound.getNombre());
+			System.out.println("La persona buscada por el id "+id+ " es " + personaFound.getNombre());
 
 	} 
 
