@@ -31,20 +31,43 @@ public class Utn {
 		return query.generarString(xql, dtoClass);
 	}
 
-	public static Enhancer setEnhancer(){
+	public static <T> Enhancer setEnhancer(Class<T>  dtoClass){
 		Enhancer enhancer = new Enhancer();
-		enhancer.setSuperclass(Persona.class);
+		enhancer.setSuperclass(dtoClass);
 		enhancer.setCallback(new MethodInterceptor() {
 		    @Override
 		    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
 		        throws Throwable {
 		      if(method.getName().startsWith("get") && proxy.invokeSuper(obj,args)==null) {
-		        return  "LAZY (value '" +
-		        		method.getName().substring(3) +
-		        		"' not set)"; //Aca debería ir a la BD, buscar el valor que falta y settearlo donde corresponde
-		      } else {
-		        return proxy.invokeSuper(obj,args);
-		      }
+		      		Connection con = SingletonConexion.getConnection();
+		    	  DataBaseConnection connection = new DataBaseConnection(con);
+		    	  
+		    	  String nombreCampo = Xql.stringMinuscula(method.getName().substring(3));
+		    	  Field campoLazy = dtoClass.getDeclaredField(nombreCampo);
+		    	  Field[] campos = {campoLazy};
+		    	  int id= 0;
+		      	  for(Method metodo : dtoClass.getDeclaredMethods())
+		    	  {
+		    		  if(metodo.getName().startsWith("getId"))
+		    		  {
+		    		    id = (int)metodo.invoke(obj,null);
+		    		    break;
+		    		  }
+		    		  
+		     	  }
+		    
+		    	  Object[] args1 = {id};		    	  
+		    	  String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);
+		  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
+		  		 query.generarQuery(campos,dtoClass);
+		         String xqlWhere = "WHERE $Persona.idPersona = ?";
+		         String myQuery = query.generarString(xqlWhere,dtoClass);
+		         
+		         List<T> objetosBD = connection.getObjetosDeBD(dtoClass,myQuery, args1,xqlWhere,true, obj, campos);
+		         obj = objetosBD.get(0);
+		    
+		      } 
+		      return  proxy.invokeSuper(obj,args);
 		    }
 		  });
 		return enhancer;
@@ -57,10 +80,10 @@ public class Utn {
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xqlWhere, Object... args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		DataBaseConnection connection = new DataBaseConnection(con);
 		String query = _query(dtoClass, xqlWhere);	
-		List<T> objetosBD = connection.getObjetosDeBD(dtoClass,query,args, xqlWhere);
+		List<T> objetosBD = connection.getObjetosDeBD(dtoClass,query,args, xqlWhere, false, null, dtoClass.getDeclaredFields());
 		
 		//Setteo el enhancer con el que voy a crear a mis proxies
-		Enhancer enhancer = setEnhancer();
+		Enhancer enhancer = setEnhancer(dtoClass);
 		List<T> proxies = new ArrayList<T>();
 		for(Object objeto:objetosBD)
 		{

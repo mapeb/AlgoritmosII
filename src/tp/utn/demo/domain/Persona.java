@@ -11,11 +11,11 @@ public class Persona
 	private Integer idPersona;
 	
 	@Column(name="nombre",fetchType=1)
-	private String nombre;
+	public String nombre;
 
 		
 	
-	@Column(name="id_direccion")    
+	@Column(name="id_direccion", fetchType=1)    
 	public Direccion direccion;
 	
 	@Column(name="id_ocupacion")

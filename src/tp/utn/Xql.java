@@ -20,7 +20,7 @@ public class Xql
 	{
 		return (palabra.substring(0,1).toUpperCase()+palabra.substring(1));
 	}
-	public String stringMinuscula(String palabra)
+	public static String stringMinuscula(String palabra)
 	{
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 

@@ -31,7 +31,7 @@ public class DataBaseConnection extends Xql
 		return connection;
 	}
 
-	public <T> List<T> getObjetosDeBD(Class<?> dtoClass, String query, Object[] args, String xql)
+	public <T> List<T> getObjetosDeBD(Class<?> dtoClass, String query, Object[] args, String xql, boolean chequeoFetchType, Object objetoSetteado, Field[] camposDeQuery)
 	{
 		PreparedStatement pstm=null;
 		ResultSet rs=null;
@@ -45,9 +45,18 @@ public class DataBaseConnection extends Xql
 			List<T> listaObjetos=new ArrayList<T>();
 			while(rs.next())
 			{
+				if(objetoSetteado == null)
+				{
 				Object objeto=Reflection.getConstructor(dtoClass).newInstance();
-				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos);
+				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos, false, camposDeQuery);
 				listaObjetos.add((T)objeto);
+				}
+				else
+				{
+					settearValoresAObjeto(dtoClass,objetoSetteado,rs,listaObjetos, chequeoFetchType, camposDeQuery);
+					listaObjetos.add((T)objetoSetteado);
+				}
+					
 			}
 			if(listaObjetos.size()==0)
 				return null;
@@ -78,9 +87,7 @@ public class DataBaseConnection extends Xql
 
 
 
-	public Method buscarSetterHijoAPadre(Object hijo, Object padre) // Confio en
-																	// ti
-																	// hermano.
+	public Method buscarSetterHijoAPadre(Object hijo, Object padre) 																										
 	{
 		Method metodosPadre[]=padre.getClass().getDeclaredMethods();
 		ArrayList<Method> settersPadre=Reflection.getGettersSetters(metodosPadre,"set");
@@ -97,7 +104,7 @@ public class DataBaseConnection extends Xql
 	// OBJETOS
 	// AL SER UNA CLASE Y UNA TABLA DIFERENTE Y LE SETTEA A LA CLASE PRINCIPAL
 	// LA CLASE SECUNDARIA EN SU ATRIBUTO
-	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto, List<T> listaObjetos)
+	public <T> void settearSobreObjeto(ResultSet rs, Field campo, String nombreEnTabla, Method setter, Object objeto, List<T> listaObjetos, Field[] camposDeQuery)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
 		Class type=campo.getType();
@@ -110,11 +117,11 @@ public class DataBaseConnection extends Xql
 				if(!Reflection.isPrimitiveClass(campo))
 				{
 					Object objetoCampo=Reflection.getConstructor(campo.getType()).newInstance();
-					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos);
+					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos, false, campo.getType().getDeclaredFields());
 
 					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
 					settearObjeto.invoke(objeto,objetoCampo);
-					// listaObjetos.add((T)objetoCampo);
+				
 
 				}
 				else
@@ -131,7 +138,11 @@ public class DataBaseConnection extends Xql
 							if(type.getSimpleName().equals(tipoClase)||type.getSimpleName().equals(tipoClaseMin))
 							{
 								Class parametros[]=metodo.getParameterTypes();
-								if(parametros.length==1&&parametros[0].getSimpleName().equals(type.getSimpleName())) setter.invoke(objeto,metodo.invoke(rs,nombreEnTabla));
+								if(parametros.length==1&&parametros[0].getSimpleName().equals(type.getSimpleName())) 
+								{
+									String parametro = (String)metodo.invoke(rs,nombreEnTabla);
+									setter.invoke(objeto,parametro);
+								}
 							}
 
 						}
@@ -146,7 +157,7 @@ public class DataBaseConnection extends Xql
 		}
 	}
 
-	public String nombreAtributoEnTabla(Class dtoClass, Field campo)
+	public static String nombreAtributoEnTabla(Class dtoClass, Field campo)
 	{
 		return Annotation.getTableName(dtoClass)+"."+Annotation.getAnnotationFieldName(campo);
 	}
@@ -205,7 +216,7 @@ public class DataBaseConnection extends Xql
 	// BUSCA LOS SETTERS DE CADA CAMPO Y LOS INVOCA CON REFLECTION AL ENCONTRAR
 	// EL CAMPO
 	// PERTINENTE
-	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos)
+	public <T> void settearValoresAObjeto(Class dtoClass, Object objeto, ResultSet rs, List<T> listaObjetos, boolean chequeoFetchType, Field[] camposDeQuery)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,SQLException
 	{
 		ArrayList<Method> setters=Reflection.getGettersSetters(dtoClass.getDeclaredMethods(),"set");
@@ -215,18 +226,28 @@ public class DataBaseConnection extends Xql
 			atributoSetter=stringMinuscula(atributoSetter);
 			for(Field campo:dtoClass.getDeclaredFields())
 			{
-				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationFieldName(campo)!=null)
+				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationFieldName(campo)!=null
+						&& campoEstaEnColumnasDeQuery(campo, camposDeQuery)) 
 				{
-					if(campo.getAnnotation(Column.class).fetchType()==2){
+					if(campo.getAnnotation(Column.class).fetchType()==2 || chequeoFetchType){
 						String nombreEnTabla=nombreAtributoEnTabla(dtoClass,campo);
-						settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos);
+						settearSobreObjeto(rs,campo,nombreEnTabla,setter,objeto,listaObjetos, camposDeQuery);
 					}
 				}
 			}
 
 		}
 	}
-
+	public boolean campoEstaEnColumnasDeQuery(Field campo, Field[] camposDeQuery) // CHEQUEA QUE EL CAMPO ESTE DENTRO
+																	// DEL SELECT EJ: SELECT nombre, direccion FROM..
+	{
+		for(Field campoQuery : camposDeQuery)
+		{
+			if(campoQuery.equals(campo))
+				return true;
+		}
+		return false;
+	}
 	// BUSCA EN LOS DISTINTOS ATRIBUTOS DE LA CLASE AQUELLOS QUE NO SON
 	// PRIMITIVOS Y REPRESENTAN
 	// UNA TABLA, PARA LUEGO BUSCAR EL CAMPO INVOLUCRADO EN EL WHERE EN ESA
