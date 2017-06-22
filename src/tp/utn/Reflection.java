@@ -50,4 +50,15 @@ public class Reflection {
 		return metodo.getName().substring(3);
 
 	}
+	public static Method getGetterDeAtributo(Class dtoClass, Field atributo)
+	{
+		ArrayList<Method> getters = Reflection.getGettersSetters(dtoClass.getDeclaredMethods(),"get");
+		for(Method getter : getters)
+		{
+			if(getAtributoDelSetterOGetter(getter).equals(Xql.stringMayuscula(atributo.getName())))
+				return getter;
+		}
+		return null;
+	}
+	
 }

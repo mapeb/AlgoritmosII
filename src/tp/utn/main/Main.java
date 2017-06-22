@@ -42,6 +42,19 @@ public class Main
 			Persona personaFound = Utn.find(con,Persona.class,id);
 			
 			System.out.println("La persona buscada por el id "+id+ " es " + personaFound.getNombre());
+			
+			Persona p = new Persona();
+			p.setNombre("juanitoElLoco");
+			p.setIdPersona(77);
+			
+			System.out.println("Cantidad de filas afectadas " +Utn.insert(con,p));
+			
+			Direccion d = new Direccion();
+			d.setCalle("la nueva calle");
+			d.setIdDireccion(66);
+			d.setNumero(5);
+			
+			System.out.println("Cantidad de filas afectadas DIRECCION " +Utn.insert(con,d));			
 
 	} 
 

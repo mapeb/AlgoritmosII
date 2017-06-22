@@ -31,6 +31,38 @@ public class DataBaseConnection extends Xql
 		return connection;
 	}
 
+	public int insertIntoTable(Connection con, String query) // RETORNA FILAS AFECTADAS - DEBERÍA SER UNA
+	{
+		PreparedStatement pstm=null;
+		int filasAfectadas = 0;
+		
+		try
+		{
+			pstm=this.getConnection().prepareStatement(query);
+			filasAfectadas = pstm.executeUpdate();
+		
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			throw new RuntimeException(ex);
+		}
+		finally
+		{
+			try
+			{
+				if(pstm!=null) pstm.close();
+
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+				throw new RuntimeException(ex);
+			}
+			
+		}
+		return filasAfectadas;
+	}
 	public <T> List<T> getObjetosDeBD(Class<?> dtoClass, String query, Object[] args, String xql, boolean chequeoFetchType, Object objetoSetteado, Field[] camposDeQuery)
 	{
 		PreparedStatement pstm=null;
@@ -41,6 +73,7 @@ public class DataBaseConnection extends Xql
 			pstm=this.getConnection().prepareStatement(query);
 			agregarCondicion(xql,pstm,args,dtoClass);
 			rs=pstm.executeQuery();
+		
 
 			List<T> listaObjetos=new ArrayList<T>();
 			while(rs.next())
@@ -173,7 +206,7 @@ public class DataBaseConnection extends Xql
 	public <T> ArrayList<String> getVariablesDelWhere(Class<T> dtoClass)
 	{
 		ArrayList<String> variables=new ArrayList<String>();
-		for(String atributo:variablesXql)
+		for(String atributo:variablesXqlWhere)
 		{
 			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
 			{

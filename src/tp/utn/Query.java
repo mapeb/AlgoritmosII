@@ -87,11 +87,11 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 }
 	public String modificarAtributosClaseAFilasTabla(String xql, Class dtoClass)
 	{
-		setVariablesXql(xql);
+		setVariablesXqlWhere(xql);
 		condicionOrdenada = xql;
 		ArrayList<String> variables=new ArrayList<String>();
 		String modificacion=xql;
-		for(String atributo : variablesXql)
+		for(String atributo : variablesXqlWhere)
 		{
 			
 			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
@@ -137,7 +137,65 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		return sacarPesos(xqlConFilasDeTabla);
 		
 	}
-	public String generarString(String xql, Class dtoClass)
+	public String generarStringUpdate(String xql, Class dtoClass)
+	{
+	//String xqlFinal= getAtri
+		return null;
+	}
+	public static String generarStringInsert(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		Class dtoClass = obj.getClass();
+		String query = "INSERT INTO " + Annotation.getTableName(dtoClass)+"(";
+		String valores = " VALUES(";
+		ArrayList<Field> atributosNoNulos = new ArrayList<Field>();	
+		ArrayList<Object> contenidoDeAtributos = new ArrayList<Object>();// obligado a haerlo así 
+																		//por la coma. no se me ocurrio otra
+																		// que me cagaba todo
+		for(Field atributo : dtoClass.getDeclaredFields())
+		{
+			Method getterAtributo = Reflection.getGetterDeAtributo(dtoClass,atributo);
+			Object contenido =  getterAtributo.invoke(obj,null);
+			if(atributo.getAnnotation(Column.class)!=null && contenido!=null)
+			{
+				atributosNoNulos.add(atributo);
+				contenidoDeAtributos.add(contenido);
+			}
+		}
+		int cantidadAtributos = atributosNoNulos.size();
+		int i=0;
+		for(Field atributoNoNulo : atributosNoNulos)
+		{	
+		
+			if(cantidadAtributos>1)
+			{
+			query+=Annotation.getAnnotationFieldName(atributoNoNulo)+", ";
+			if(contenidoDeAtributos.get(i).getClass().equals(String.class))
+				valores+="'"+contenidoDeAtributos.get(i).toString()+"', ";
+			else
+			valores+=contenidoDeAtributos.get(i).toString()+", ";
+			cantidadAtributos--;
+			i++;
+			}
+			else
+			{
+				if(cantidadAtributos==1)
+				{
+					query+=Annotation.getAnnotationFieldName(atributoNoNulo);
+					if(contenidoDeAtributos.get(i).getClass().equals(String.class))
+					valores+="'"+contenidoDeAtributos.get(i).toString()+"'";
+					else
+					valores+=contenidoDeAtributos.get(i).toString();
+					i++;
+				}
+			}
+			
+		}
+		query+=")";
+		valores+=")";
+		return query+=valores;
+		
+	}
+	public String generarStringSelect(String xql, Class dtoClass)
 	{
 		String xqlFinal="";
 		if(!xql.equals(""))

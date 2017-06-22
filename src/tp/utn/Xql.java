@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class Xql
 {
-	protected static ArrayList<String> variablesXql=new ArrayList<String>();
+	protected static ArrayList<String> variablesXqlWhere=new ArrayList<String>();
+	protected static ArrayList<String> variablesXqlUpdate = new ArrayList<String>();
 	
 	
 	public String getClaseDe(String anotacionSQL)// ej: persona.id_persona
@@ -16,7 +17,7 @@ public class Xql
 		}
 		return "";
 	}
-	public String stringMayuscula(String palabra)
+	public static String stringMayuscula(String palabra)
 	{
 		return (palabra.substring(0,1).toUpperCase()+palabra.substring(1));
 	}
@@ -25,15 +26,19 @@ public class Xql
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
 	}
-
-	public void setVariablesXql(String xql)
+	public void setVariablesXqlUpdate(String xql)
 	{
-		if(variablesXql.size()!=0)
-			variablesXql.clear();    // NO ME QUEDO OTRA YA QUE ES VARIABLE DE CLASE PORQUE 
+		//$nombre=? WHERE ...
+		//if(variablesXqlUpdate.size())
+	}
+	public void setVariablesXqlWhere(String xql)
+	{
+		if(variablesXqlWhere.size()!=0)
+			variablesXqlWhere.clear();    // NO ME QUEDO OTRA YA QUE ES VARIABLE DE CLASE PORQUE 
 		String[] palabras=xql.split(" "); // TERMINAMOS DIVIENDO LAS COSAS EN SUBCLASES
 		for(String palabra:palabras)
 		{
-			if(palabra.substring(0,1).equals("$")) variablesXql.add(palabra.substring(1));
+			if(palabra.substring(0,1).equals("$")) variablesXqlWhere.add(palabra.substring(1));
 		}
 	}
 	public String getAtributoSinNombreClase(String anotacionSQL)

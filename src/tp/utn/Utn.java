@@ -28,7 +28,7 @@ public class Utn {
 		Field[] campos = dtoClass.getDeclaredFields();
 		
 		query.generarQuery(campos, dtoClass);
-		return query.generarString(xql, dtoClass);
+		return query.generarStringSelect(xql, dtoClass);
 	}
 
 	public static <T> Enhancer setEnhancer(Class<T>  dtoClass){
@@ -61,7 +61,7 @@ public class Utn {
 		  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		  		 query.generarQuery(campos,dtoClass);
 		         String xqlWhere = "$Persona.idPersona = ?";
-		         String myQuery = query.generarString(xqlWhere,dtoClass);
+		         String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
 		         
 		         List<T> objetosBD = connection.getObjetosDeBD(dtoClass,myQuery, args1,xqlWhere,true, obj, campos);
 		         obj = objetosBD.get(0);
@@ -133,12 +133,21 @@ public class Utn {
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
 	public static <T> String _update(Class<T> dtoClass, String xql) {
+		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
+		
+		
+		
+		
+		
 		return null;
 	}
 
 	// Invoca a: _update para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
 	public static int update(Connection con, Class<?> dtoClass, String xql, Object... args) {
+		DataBaseConnection connection = new DataBaseConnection(con);
+		String tabla = Annotation.getTableName(dtoClass);
+		String query = "UPDATE FROM " + tabla + " SET ";
 		return 0;
 	}
 
@@ -176,8 +185,12 @@ public class Utn {
 
 	// Invoca a: _insert para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
-	public static int insert(Connection con, Object dto) {
-		return 0;
+	public static int insert(Connection con, Object dto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		String query = Query.generarStringInsert(dto);
+		System.out.println(query);
+		DataBaseConnection connection = new DataBaseConnection(con);
+		return(connection.insertIntoTable(con,query));
+	
 	}
 
 	/*public static void main(String[] args) {
