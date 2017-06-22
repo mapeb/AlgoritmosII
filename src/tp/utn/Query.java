@@ -146,7 +146,9 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		for(String attr:this.getSelect())
 			q+=attr+",";
 		q=q.substring(0,q.length()-1);
-		q+=" FROM "+from+" "+xqlFinal;
+		q+=" FROM "+from+" ";
+		if(!xqlFinal.equals(""))
+			q+= "WHERE " + xqlFinal;
 		return q;
 	}
 

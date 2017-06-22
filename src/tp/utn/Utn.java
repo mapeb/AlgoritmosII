@@ -60,7 +60,7 @@ public class Utn {
 		    	  String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);
 		  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		  		 query.generarQuery(campos,dtoClass);
-		         String xqlWhere = "WHERE $Persona.idPersona = ?";
+		         String xqlWhere = "$Persona.idPersona = ?";
 		         String myQuery = query.generarString(xqlWhere,dtoClass);
 		         
 		         List<T> objetosBD = connection.getObjetosDeBD(dtoClass,myQuery, args1,xqlWhere,true, obj, campos);
@@ -119,7 +119,7 @@ public class Utn {
 	public static <T> T find(Connection con, Class<T> dtoClass, Object id) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException{
 		String idClase = Reflection.getIdField(dtoClass);
 		String clase = dtoClass.getSimpleName();
-		String xqlWhere = "WHERE $"+clase+"."+idClase+" = ?";
+		String xqlWhere = "$"+clase+"."+idClase+" = ?";
 		List<T> listaObjetos = query(con, dtoClass, xqlWhere, id);
 		return listaObjetos.get(0);
 		
