@@ -26,7 +26,7 @@ public class Main
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException
 	{
 			Connection con = SingletonConexion.getConnection();
-			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"","");
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"$direccion.numero = ?",123);
 			for(Persona per : lista)
 			{
 				
@@ -43,7 +43,7 @@ public class Main
 			
 			System.out.println("La persona buscada por el id "+id+ " es " + personaFound.getNombre());
 			
-			Persona p = new Persona();
+			/*Persona p = new Persona();
 			p.setNombre("juanitoElLoco");
 			p.setIdPersona(77);
 			
@@ -54,8 +54,11 @@ public class Main
 			d.setIdDireccion(66);
 			d.setNumero(5);
 			
-			System.out.println("Cantidad de filas afectadas DIRECCION " +Utn.insert(con,d));			
-
+			System.out.println("Cantidad de filas afectadas DIRECCION " +Utn.insert(con,d));	*/
+			
+			//System.out.println("Cantidad de filas eliminadas " + Utn.delete(con,Persona.class,"$persona.idPersona = ?",66));
+			int idEliminar = 77;
+			System.out.println("Cantidad de filas eliminadas con id " + idEliminar + " es: " + Utn.delete(con,Persona.class,idEliminar));
 	} 
 
 }

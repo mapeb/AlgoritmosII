@@ -85,7 +85,7 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 	}
 	return condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
 }
-	public String modificarAtributosClaseAFilasTabla(String xql, Class dtoClass)
+	public String modificarAtributosClaseAFilasTabla(String xql, Class<?> dtoClass)
 	{
 		setVariablesXqlWhere(xql);
 		condicionOrdenada = xql;
@@ -151,6 +151,8 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		ArrayList<Object> contenidoDeAtributos = new ArrayList<Object>();// obligado a haerlo así 
 																		//por la coma. no se me ocurrio otra
 																		// que me cagaba todo
+									// podria haberlo hecho normal y eliminar una coma si aparecia a lo ultimo
+					// pero ya ta, paja
 		for(Field atributo : dtoClass.getDeclaredFields())
 		{
 			Method getterAtributo = Reflection.getGetterDeAtributo(dtoClass,atributo);
@@ -194,6 +196,11 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		valores+=")";
 		return query+=valores;
 		
+	}
+	public String generarStringDelete(String xql, Class dtoClass)
+	{
+		String xqlFinal = getAtributosRealesDeTabla(xql, dtoClass);
+		return "DELETE FROM "+from+" WHERE " +xqlFinal;
 	}
 	public String generarStringSelect(String xql, Class dtoClass)
 	{

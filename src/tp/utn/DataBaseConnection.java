@@ -30,7 +30,39 @@ public class DataBaseConnection extends Xql
 	{
 		return connection;
 	}
+	public int delete(Connection con, String query, Object[] args, String xql, Class<?> dtoClass)
+	{
+		PreparedStatement pstm=null;
+		int filasAfectadas = 0;
+		try
+		{
+			pstm=this.getConnection().prepareStatement(query);
+			agregarCondicion(xql,pstm,args,dtoClass);
+			filasAfectadas = pstm.executeUpdate();
+		
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			throw new RuntimeException(ex);
+		}
+		finally
+		{
+			try
+			{
+				if(pstm!=null) pstm.close();
 
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+				throw new RuntimeException(ex);
+			}
+			
+		}
+		return filasAfectadas;
+		
+	}
 	public int insertIntoTable(Connection con, String query) // RETORNA FILAS AFECTADAS - DEBERÍA SER UNA
 	{
 		PreparedStatement pstm=null;

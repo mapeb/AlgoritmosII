@@ -161,13 +161,19 @@ public class Utn {
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
 	public static String _delete(Class<?> dtoClass, String xql) {
-		return null;
+		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
+		return query.generarStringDelete(xql,dtoClass);
+		
 	}
 
 	// Invoca a: _delete para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
 	public static int delete(Connection con, Class<?> dtoClass, String xql, Object... args) {
-		return 0;
+		DataBaseConnection connection = new DataBaseConnection(con);
+		String query = _delete(dtoClass, xql);
+		return connection.delete(con,query,args,xql,dtoClass);
+		
+		
 	}
 
 	// Retorna la cantidad de filas afectadas al eliminar la fila identificada
@@ -175,7 +181,11 @@ public class Utn {
 	// (deberia ser: 1 o 0)
 	// Invoca a: delete
 	public static int delete(Connection con, Class<?> dtoClass, Object id) {
-		return 0;
+		String idClase = Reflection.getIdField(dtoClass);
+		String clase = dtoClass.getSimpleName();
+		String xqlWhere = "$"+clase+"."+idClase+" = ?";
+		return delete(con, dtoClass, xqlWhere, id);
+		
 	}
 
 	// Retorna: el SQL correspondiente a la clase dtoClass
