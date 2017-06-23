@@ -30,6 +30,7 @@ public class DataBaseConnection extends Xql
 	{
 		return connection;
 	}
+	
 	public int delete(Connection con, String query, Object[] args, String xql, Class<?> dtoClass)
 	{
 		PreparedStatement pstm=null;

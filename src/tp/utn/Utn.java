@@ -132,22 +132,19 @@ public class Utn {
 	}
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
-	public static <T> String _update(Class<T> dtoClass, String xql) {
+	public static <T> String _update(Class<T> dtoClass, String xql) { // XQL =  
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
-		
-		
-		
-		
-		
-		return null;
+		return query.generarStringUpdate(xql,dtoClass);
 	}
 
 	// Invoca a: _update para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
 	public static int update(Connection con, Class<?> dtoClass, String xql, Object... args) {
 		DataBaseConnection connection = new DataBaseConnection(con);
-		String tabla = Annotation.getTableName(dtoClass);
-		String query = "UPDATE FROM " + tabla + " SET ";
+		String myQuery = _update(dtoClass, xql);
+		
+		
+		
 		return 0;
 	}
 
@@ -156,6 +153,7 @@ public class Utn {
 	// de dto
 	// Retorna: Cuantas filas resultaron modificadas (deberia: ser 1 o 0)
 	public static int update(Connection con, Object dto) {
+		
 		return 0;
 	}
 
@@ -196,10 +194,11 @@ public class Utn {
 	// Invoca a: _insert para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
 	public static int insert(Connection con, Object dto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		String query = Query.generarStringInsert(dto);
+		Query query = new Query();
+		String miQuery = query.generarStringInsert(dto);
 		System.out.println(query);
 		DataBaseConnection connection = new DataBaseConnection(con);
-		return(connection.insertIntoTable(con,query));
+		return(connection.insertIntoTable(con,miQuery));
 	
 	}
 

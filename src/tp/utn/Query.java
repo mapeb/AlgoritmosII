@@ -28,16 +28,33 @@ public class Query extends Xql
 	List<String> select;
 	String from;
 	private static String condicionOrdenada;
-
+	private ArrayList<Field> atributosNoNulosDelObjeto;	
+	private ArrayList<Object> contenidoDeAtributosDelObjeto;
 
 	public Query(String from)
 	{
 		super();
 		select=new ArrayList<String>();
+		atributosNoNulosDelObjeto = new ArrayList<Field>();
+		contenidoDeAtributosDelObjeto = new ArrayList<Object>();
 		this.from=from;
 
 	}
-
+	public Query()
+	{
+		super();
+		select=new ArrayList<String>();
+		atributosNoNulosDelObjeto = new ArrayList<Field>();
+		contenidoDeAtributosDelObjeto = new ArrayList<Object>();
+	}
+	public ArrayList<Field> getAtributosNoNulosDelObjeto()
+	{
+		return atributosNoNulosDelObjeto;
+	}
+	public ArrayList<Object> getContenidoDeAtributosDelObjeto()
+	{
+		return contenidoDeAtributosDelObjeto;
+	}
 	public void generarQuery(Field[] campos, Class<?> dtoClass)
 	{
 		for(Field campo:campos)
@@ -137,44 +154,83 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		return sacarPesos(xqlConFilasDeTabla);
 		
 	}
-	public String generarStringUpdate(String xql, Class dtoClass)
-	{
-	//String xqlFinal= getAtri
-		return null;
-	}
-	public static String generarStringInsert(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	public String setDeUpdate(String xql, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
 		Class dtoClass = obj.getClass();
-		String query = "INSERT INTO " + Annotation.getTableName(dtoClass)+"(";
-		String valores = " VALUES(";
-		ArrayList<Field> atributosNoNulos = new ArrayList<Field>();	
-		ArrayList<Object> contenidoDeAtributos = new ArrayList<Object>();// obligado a haerlo así 
-																		//por la coma. no se me ocurrio otra
-																		// que me cagaba todo
-									// podria haberlo hecho normal y eliminar una coma si aparecia a lo ultimo
-					// pero ya ta, paja
+		settearAtributosNoNulosYContenido(dtoClass,obj);
+		String[] division = xql.split("WHERE");
+		String set = "";
+		int cantAtributos = atributosNoNulosDelObjeto.size();
+		for(Field atributoNoNulo : atributosNoNulosDelObjeto)
+		{
+			for(Object contenido : contenidoDeAtributosDelObjeto)
+			{
+			if(cantAtributos>1)
+			{
+			set+=atributoNoNulo+"="+contenidoDeAtributosDelObjeto+", ";
+			cantAtributos--;
+			}
+			if(cantAtributos==1)
+			set+=atributoNoNulo+"="+contenidoDeAtributosDelObjeto;
+			break;
+			}
+		}
+		for(String cadena : division)
+		{
+			if(cadena.endsWith("SET "))
+				cadena+=set;
+				
+		}
+		StringBuffer buffer = new StringBuffer();
+		for(String cadena : division)
+		buffer = buffer.append(cadena);
+		return buffer.toString();
+		
+		
+	}
+	public String generarStringUpdate(String xqlWhere, Class dtoClass) // HORRIBLE TENER QUE HACERLO ASI 
+	{
+		String xqlFinal = getAtributosRealesDeTabla(xqlWhere, dtoClass);
+		return "UPDATE FROM "+from+" SET " +" WHERE "+ xqlFinal;
+		
+		
+	}
+	public void settearAtributosNoNulosYContenido(Class dtoClass, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
 		for(Field atributo : dtoClass.getDeclaredFields())
 		{
 			Method getterAtributo = Reflection.getGetterDeAtributo(dtoClass,atributo);
 			Object contenido =  getterAtributo.invoke(obj,null);
 			if(atributo.getAnnotation(Column.class)!=null && contenido!=null)
 			{
-				atributosNoNulos.add(atributo);
-				contenidoDeAtributos.add(contenido);
+				atributosNoNulosDelObjeto.add(atributo);
+				contenidoDeAtributosDelObjeto.add(contenido);
 			}
 		}
-		int cantidadAtributos = atributosNoNulos.size();
+	}
+	public String generarStringInsert(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
+	{
+		Class dtoClass = obj.getClass();
+		String query = "INSERT INTO " + Annotation.getTableName(dtoClass)+"(";
+		String valores = " VALUES(";
+		// obligado a haerlo así 
+																		//por la coma. no se me ocurrio otra
+																		// que me cagaba todo
+									// podria haberlo hecho normal y eliminar una coma si aparecia a lo ultimo
+					// pero ya ta, paja
+		settearAtributosNoNulosYContenido(dtoClass, obj);
+		int cantidadAtributos = atributosNoNulosDelObjeto.size();
 		int i=0;
-		for(Field atributoNoNulo : atributosNoNulos)
+		for(Field atributoNoNulo : atributosNoNulosDelObjeto)
 		{	
 		
 			if(cantidadAtributos>1)
 			{
 			query+=Annotation.getAnnotationFieldName(atributoNoNulo)+", ";
-			if(contenidoDeAtributos.get(i).getClass().equals(String.class))
-				valores+="'"+contenidoDeAtributos.get(i).toString()+"', ";
+			if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class))
+				valores+="'"+contenidoDeAtributosDelObjeto.get(i).toString()+"', ";
 			else
-			valores+=contenidoDeAtributos.get(i).toString()+", ";
+			valores+=contenidoDeAtributosDelObjeto.get(i).toString()+", ";
 			cantidadAtributos--;
 			i++;
 			}
@@ -183,10 +239,10 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 				if(cantidadAtributos==1)
 				{
 					query+=Annotation.getAnnotationFieldName(atributoNoNulo);
-					if(contenidoDeAtributos.get(i).getClass().equals(String.class))
-					valores+="'"+contenidoDeAtributos.get(i).toString()+"'";
+					if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class))
+					valores+="'"+contenidoDeAtributosDelObjeto.get(i).toString()+"'";
 					else
-					valores+=contenidoDeAtributos.get(i).toString();
+					valores+=contenidoDeAtributosDelObjeto.get(i).toString();
 					i++;
 				}
 			}
