@@ -15,8 +15,7 @@ import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.ann.Column;
 import tp.utn.ann.Table;
-import tp.utn.demo.domain.Direccion;
-import tp.utn.demo.domain.Persona;
+import tp.utn.demo.domain.*;
 import tp.utn.main.SingletonConexion;
 import tp.utn.Reflection;
 

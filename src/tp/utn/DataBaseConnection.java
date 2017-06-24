@@ -182,7 +182,8 @@ public class DataBaseConnection extends Xql
 			{
 				if(!Reflection.isPrimitiveClass(campo))
 				{
-					Object objetoCampo=Reflection.getConstructor(campo.getType()).newInstance();
+					//Object objetoCampo = new Object();
+					Object objetoCampo=campo.getType().getConstructor(null).newInstance(null);
 					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos, false, campo.getType().getDeclaredFields());
 
 					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);

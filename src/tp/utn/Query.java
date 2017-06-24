@@ -85,12 +85,12 @@ public class Query extends Xql
 		return cadena.toString();
 	}
 
-public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, String atributo)
+public String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoClass, String atributo)
 {
 	
 	String[] modificacion = condicionOrdenada.split(" ");
 	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
-	String reemplazo = "$"+stringMinuscula(dtoClass.getSimpleName())+"."+nombreEnTabla;
+	String reemplazo = "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 	String aModificar = null;
 	for(String modif : modificacion)
 	{
@@ -101,6 +101,11 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 		}
 	}
 	return condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
+}
+public String cambiarNombreClasePorNombreTabla(Field campo, Class<?> dtoClass, String atributo)
+{
+	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
+return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 }
 	public String modificarAtributosClaseAFilasTabla(String xql, Class<?> dtoClass)
 	{
@@ -115,10 +120,11 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 			{
 				for(Field campo:dtoClass.getDeclaredFields())
 				{
-					if(campo.getName().equals(getAtributoSinNombreClase(atributo))
-							&& !(Annotation.getAnnotationFieldName(campo).equals(getAtributoSinNombreClase(atributo))))
+					if(campo.getName().equals(getAtributoSinNombreClase(atributo)))
 					{
+						
 						modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, atributo);
+						
 					}
 				}
 			}
@@ -133,11 +139,12 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class dtoClass, Strin
 						
 						for(Field campoSegunda:campito.getType().getDeclaredFields())
 						{
-							if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo))
-									&& !(Annotation.getAnnotationFieldName(campoSegunda).equals(getAtributoSinNombreClase(atributo))))
+							if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo)))
 							{
-								modificacion = cambiarAtributoPorNombreEnTabla(campoSegunda,dtoClass, atributo);
-								i=1;
+								
+								modificacion = cambiarAtributoPorNombreEnTabla(campoSegunda,campito.getType(), atributo);
+								
+								i=1; 
 								break;
 							}
 						}
