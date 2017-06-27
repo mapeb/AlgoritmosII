@@ -18,6 +18,7 @@ import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.ann.Column;
 import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
+import tp.utn.demo.domain.Direccion;
 import tp.utn.main.SingletonConexion;
 
 public class DataBaseConnection extends Xql
@@ -249,7 +250,7 @@ public class DataBaseConnection extends Xql
 				{
 					Object objetoCampo = campo.getType().getConstructor(null).newInstance(null);
 					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos, false, campo.getType().getDeclaredFields());
-					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
+					
 					
 					Enhancer enhancer = setEnhancer(campo.getType());
 					Object proxy = Reflection.getConstructor(campo.getType()).newInstance();
@@ -268,9 +269,10 @@ public class DataBaseConnection extends Xql
 										.findFirst().get();
 						//Guardo el resultado del getter y lo uso para settear el proxy
 						Object argumentoSetter = elGetter.invoke(objetoCampo,null);
-						String argsetstring = argumentoSetter.toString();
-						setter.invoke(proxy,argumentoSetter);
-					}		
+						
+						unSetter.invoke(proxy,argumentoSetter);
+					}
+					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
 					settearObjeto.invoke(objeto,proxy);			
 				}
 				else
@@ -301,7 +303,7 @@ public class DataBaseConnection extends Xql
 		}
 		catch(Exception ex)
 		{
-			ex.printStackTrace();
+			ex.printStackTrace(); 
 			throw new RuntimeException(ex);
 		}
 	}

@@ -34,7 +34,10 @@ public class Main
 				System.out.println("Nombre: " + per.getNombre());
 				System.out.println("Direccion: " + per.direccion);
 				System.out.println("Direccion: " + per.getDireccion());
-				System.out.println("Personas con esta direccion: " + per.getDireccion().getPersonas());
+				for(Persona unaPersona : per.getDireccion().getPersonas())
+				{
+				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
+				}
 				System.out.println("Ocupacion: " + per.ocupacion);
 				System.out.println("Ocupacion: " + per.getOcupacion().getDescripcion());
 				System.out.println("Descripcion: " + per.getOcupacion().getTipoOcupacion().getDescripcion());
