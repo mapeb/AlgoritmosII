@@ -63,7 +63,7 @@ public class Utn {
 				    	String idStr = "id" + Xql.stringMayuscula(claseStr);
 				    	String xqlWhere = "$" + claseStr + "." + idStr + " = ?";
 				    	
-			    	if(!method.getReturnType().getSimpleName().equals("Collection"))
+			    	if(!Collection.class.isAssignableFrom(method.getReturnType()))
 			    	{
 				    	String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);		    				    	
 				  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
