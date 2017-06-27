@@ -122,37 +122,7 @@ public class Utn {
 								.filter(getter -> getter.getName().substring(3).equals(setter.getName().substring(3)))
 								.findFirst().get();
 				//Guardo el resultado del getter y lo uso para settear el proxy
-				Object argumentoSetter = elGetter.invoke(objeto,(Object[])null);
-				
-			/*	if(!Reflection.isThisClassAPrimitiveClass(elGetter.getReturnType()))
-				{
-					Enhancer enhancerRecursivo = setEnhancer(elGetter.getReturnType());
-					Object proxyRecursivo = Reflection.getConstructor(elGetter.getReturnType()).newInstance();
-					proxyRecursivo = elGetter.getReturnType().cast(enhancerRecursivo.create());
-					Method[] metodosRecursivos = elGetter.getReturnType().getDeclaredMethods();
-					//Saco todos los getters y setters
-					ArrayList<Method> gettersRecursivos = Reflection.getGettersSetters(metodosRecursivos,"get");
-					ArrayList<Method> settersRecursivos = Reflection.getGettersSetters(metodosRecursivos,"set");
-					for(Method setterRecursivo:settersRecursivos)
-					{
-						//Busco el getter de cada setter
-						Method elGetterRecursivo = gettersRecursivos.stream()
-									.filter(getterRec -> getterRec.getName().substring(3).equals(setterRecursivo.getName().substring(3)))
-									.findFirst().get();
-						
-						System.out.println(elGetterRecursivo.getName());
-						System.out.println(setterRecursivo.getName());
-						
-						Object argumentoBienClasificado = elGetter.getReturnType().newInstance();
-						argumentoBienClasificado = elGetter.getReturnType().cast(argumentoSetter);
-						
-						System.out.println(argumentoBienClasificado);
-						
-						Object yanise = elGetterRecursivo.invoke(argumentoBienClasificado,(Object[])null);
-						setterRecursivo.invoke(proxyRecursivo,yanise);
-					}
-				}*/
-				
+				Object argumentoSetter = elGetter.invoke(objeto,(Object[])null);				
 				setter.invoke(proxy,argumentoSetter);
 			}
 			

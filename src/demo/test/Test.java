@@ -19,9 +19,9 @@ public class Test
 		Connection con = SingletonConexion.getConnection();
 		
 		// verifico el find
-		Persona p = Utn.find(con,Persona.class,12);
-		Assert.assertEquals(p.getNombre(),"Pablo");
-		Assert.assertEquals((Integer)p.getOcupacion().getIdOcupacion(),(Integer)4);
+		Persona p = Utn.find(con,Persona.class,1);
+		Assert.assertEquals(p.getNombre(),"El comandante");
+		Assert.assertEquals((Integer)p.getOcupacion().getIdOcupacion(),(Integer)1);
 
 		// ocupacion es LAZY => debe permanecer NULL hasta que haga el get
 		Assert.assertNull(p.ocupacion);

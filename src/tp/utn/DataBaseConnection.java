@@ -9,10 +9,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import net.sf.cglib.proxy.Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.ann.Column;
+import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
+import tp.utn.main.SingletonConexion;
 
 public class DataBaseConnection extends Xql
 {
@@ -29,6 +35,64 @@ public class DataBaseConnection extends Xql
 	public Connection getConnection()
 	{
 		return connection;
+	}
+	
+	public static <T> Enhancer setEnhancer(Class<T> dtoClass){
+		Enhancer enhancer = new Enhancer();
+		enhancer.setSuperclass(dtoClass);
+		enhancer.setCallback(new MethodInterceptor() {
+		    @SuppressWarnings("unchecked")
+			@Override
+		    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
+		        throws Throwable {    	
+		    	if(method.getName().startsWith("get") && proxy.invokeSuper(obj,args)==null){
+		    		
+			    		Connection con = SingletonConexion.getConnection();
+			    		DataBaseConnection connection = new DataBaseConnection(con);
+			    	  
+			    		String nombreCampo = Xql.stringMinuscula(method.getName().substring(3));
+			    		Field campoLazy = dtoClass.getDeclaredField(nombreCampo);
+			    		Field[] campos = {campoLazy};
+			    		int id = 0;
+			    		for(Method metodo : dtoClass.getDeclaredMethods())
+			    		{
+			    			if(metodo.getName().startsWith("getId"))
+			    			{
+			    				id = (int)metodo.invoke(obj,null);
+			    				break;
+			    			}	    		  
+			    		}
+			    		Object[] args1 = {id};		
+			    		String claseStr = dtoClass.getSimpleName();
+				    	String idStr = "id" + Xql.stringMayuscula(claseStr);
+				    	String xqlWhere = "$" + claseStr + "." + idStr + " = ?";
+				    	
+			    	if(!method.getReturnType().getSimpleName().equals("Collection"))
+			    	{
+				    	String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);		    				    	
+				  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
+				  		query.generarQuery(campos,dtoClass);		        
+				        String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
+				         
+				        List<T> objetosBD = connection.getObjetosDeBD(dtoClass, myQuery, args1, xqlWhere, true, obj, campos);
+				        obj = objetosBD.get(0);
+			        }
+		    		else
+		    		{
+		    			Class<T> claseDeColeccion = (Class<T>) campoLazy.getAnnotation(Relation.class).type();
+						List<T> objetosDeColeccion = (List<T>) Utn.query(con,claseDeColeccion,xqlWhere,id);
+						Collection<T> coleccionplz = new ArrayList<T>();
+						coleccionplz.addAll(objetosDeColeccion);
+						String camposta = Xql.stringMayuscula(nombreCampo);
+						for(Method metodo: dtoClass.getDeclaredMethods())	
+							if(metodo.getName().startsWith("set") && metodo.getName().substring(3).equals(camposta))
+								metodo.invoke(obj,coleccionplz);
+		    		}
+		    	} 
+		      return  proxy.invokeSuper(obj,args);
+		    }
+		  });
+		return enhancer;
 	}
 	
 	public int delete(Connection con, String query, Object[] args, String xql, Class<?> dtoClass)
@@ -113,9 +177,9 @@ public class DataBaseConnection extends Xql
 			{
 				if(objetoSetteado == null)
 				{
-				Object objeto=Reflection.getConstructor(dtoClass).newInstance();
-				settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos, false, camposDeQuery);
-				listaObjetos.add((T)objeto);
+					Object objeto = Reflection.getConstructor(dtoClass).newInstance();
+					settearValoresAObjeto(dtoClass,objeto,rs,listaObjetos, false, camposDeQuery);
+					listaObjetos.add((T)objeto);
 				}
 				else
 				{
@@ -159,6 +223,7 @@ public class DataBaseConnection extends Xql
 		ArrayList<Method> settersPadre=Reflection.getGettersSetters(metodosPadre,"set");
 		for(Method setter:settersPadre)
 		{
+			String hijonombre = hijo.getClass().getSimpleName();
 			if(setter.getName().substring(3).equals(hijo.getClass().getSimpleName())) return setter;
 		}
 		return null;
@@ -182,14 +247,31 @@ public class DataBaseConnection extends Xql
 			{
 				if(!Reflection.isPrimitiveClass(campo))
 				{
-					//Object objetoCampo = new Object();
-					Object objetoCampo=campo.getType().getConstructor(null).newInstance(null);
+					Object objetoCampo = campo.getType().getConstructor(null).newInstance(null);
 					settearValoresAObjeto(campo.getType(),objetoCampo,rs,listaObjetos, false, campo.getType().getDeclaredFields());
-
 					Method settearObjeto=buscarSetterHijoAPadre(objetoCampo,objeto);
-					settearObjeto.invoke(objeto,objetoCampo);
-				
-
+					
+					Enhancer enhancer = setEnhancer(campo.getType());
+					Object proxy = Reflection.getConstructor(campo.getType()).newInstance();
+					proxy = campo.getType().cast(enhancer.create());
+					
+					Method[] metodos = campo.getType().getDeclaredMethods();
+					//Saco todos los getters y setters
+					ArrayList<Method> getters = Reflection.getGettersSetters(metodos,"get");
+					ArrayList<Method> setters = Reflection.getGettersSetters(metodos,"set");
+							
+					for(Method unSetter:setters)
+					{
+						//Busco el getter de cada setter
+						Method elGetter = getters.stream()
+										.filter(getter -> getter.getName().substring(3).equals(unSetter.getName().substring(3)))
+										.findFirst().get();
+						//Guardo el resultado del getter y lo uso para settear el proxy
+						Object argumentoSetter = elGetter.invoke(objetoCampo,null);
+						String argsetstring = argumentoSetter.toString();
+						setter.invoke(proxy,argumentoSetter);
+					}		
+					settearObjeto.invoke(objeto,proxy);			
 				}
 				else
 				{
