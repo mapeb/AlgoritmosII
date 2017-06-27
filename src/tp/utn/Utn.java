@@ -59,7 +59,7 @@ public class Utn {
 			    			}	    		  
 			    		}
 			    		Object[] args1 = {id};		
-			    		String claseStr = dtoClass.getAnnotation(Table.class).name();
+			    		String claseStr = dtoClass.getSimpleName();
 				    	String idStr = "id" + Xql.stringMayuscula(claseStr);
 				    	String xqlWhere = "$" + claseStr + "." + idStr + " = ?";
 				    	
