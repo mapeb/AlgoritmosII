@@ -27,7 +27,9 @@ public class Annotation {
 	}
 	public static String getAnnotationFieldName(Field campo)
 	{
-		return (campo.getAnnotation(Column.class)).name();
+		if(campo.getAnnotation(Column.class)!=null)
+			return (campo.getAnnotation(Column.class)).name();
+		return null;
 	}
 
 }

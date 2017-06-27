@@ -293,7 +293,8 @@ public class DataBaseConnection extends Xql
 			atributoSetter=stringMinuscula(atributoSetter);
 			for(Field campo:dtoClass.getDeclaredFields())
 			{
-				if(campo.getName().equals(atributoSetter)&&Annotation.getAnnotationFieldName(campo)!=null
+
+				if(campo.getName().equals(atributoSetter) && Annotation.getAnnotationFieldName(campo) != null	
 						&& campoEstaEnColumnasDeQuery(campo, camposDeQuery)) 
 				{
 					if(campo.getAnnotation(Column.class).fetchType()==2 || chequeoFetchType){
@@ -383,7 +384,7 @@ public class DataBaseConnection extends Xql
 
 	// OBTIENE LAS VARIABLES IMPLICADAS EN EL WHERE Y LAS SETEA EN LA QUERY A
 	// TRAVES DEL PSTM
-	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class dtoClass)
+	public <T> void agregarCondicion(String xql, PreparedStatement pstm, Object[] args, Class<?> dtoClass)
 			throws NoSuchFieldException,SecurityException,IllegalAccessException,IllegalArgumentException,InvocationTargetException
 	{
 		try

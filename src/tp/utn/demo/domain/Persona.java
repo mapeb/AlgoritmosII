@@ -10,15 +10,13 @@ public class Persona
 	@Column(name="id_persona")
 	private Integer idPersona;
 	
-	@Column(name="nombre",fetchType=1)
+	@Column(name="nombre", fetchType = 1)
 	public String nombre;
-
-		
 	
-	@Column(name="id_direccion", fetchType=1)    
+	@Column(name="id_direccion", fetchType = 1)    
 	public Direccion direccion;
 	
-	@Column(name="id_ocupacion")
+	@Column(name="id_ocupacion", fetchType = 1)
 	public Ocupacion ocupacion;
 
 	public Persona(Integer unId, String unNombre, Direccion unaDireccion, Ocupacion unaOcupacion)

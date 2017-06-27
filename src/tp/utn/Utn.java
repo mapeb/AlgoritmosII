@@ -8,12 +8,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.ann.Column;
+import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
 import tp.utn.demo.domain.*;
 import tp.utn.main.SingletonConexion;
@@ -30,42 +32,59 @@ public class Utn {
 		return query.generarStringSelect(xql, dtoClass);
 	}
 
-	public static <T> Enhancer setEnhancer(Class<T>  dtoClass){
+	
+	public static <T> Enhancer setEnhancer(Class<T> dtoClass){
 		Enhancer enhancer = new Enhancer();
 		enhancer.setSuperclass(dtoClass);
 		enhancer.setCallback(new MethodInterceptor() {
-		    @Override
+		    @SuppressWarnings("unchecked")
+			@Override
 		    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy)
-		        throws Throwable {
-		      if(method.getName().startsWith("get") && proxy.invokeSuper(obj,args)==null) {
-		      		Connection con = SingletonConexion.getConnection();
-		    	  DataBaseConnection connection = new DataBaseConnection(con);
-		    	  
-		    	  String nombreCampo = Xql.stringMinuscula(method.getName().substring(3));
-		    	  Field campoLazy = dtoClass.getDeclaredField(nombreCampo);
-		    	  Field[] campos = {campoLazy};
-		    	  int id= 0;
-		      	  for(Method metodo : dtoClass.getDeclaredMethods())
-		    	  {
-		    		  if(metodo.getName().startsWith("getId"))
-		    		  {
-		    		    id = (int)metodo.invoke(obj,null);
-		    		    break;
-		    		  }
-		    		  
-		     	  }
-		    
-		    	  Object[] args1 = {id};		    	  
-		    	  String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);
-		  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
-		  		 query.generarQuery(campos,dtoClass);
-		         String xqlWhere = "$Persona.idPersona = ?";
-		         String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
-		         
-		         List<T> objetosBD = connection.getObjetosDeBD(dtoClass,myQuery, args1,xqlWhere,true, obj, campos);
-		         obj = objetosBD.get(0);
-		    
-		      } 
+		        throws Throwable {    	
+		    	if(method.getName().startsWith("get") && proxy.invokeSuper(obj,args)==null){
+		    		
+			    		Connection con = SingletonConexion.getConnection();
+			    		DataBaseConnection connection = new DataBaseConnection(con);
+			    	  
+			    		String nombreCampo = Xql.stringMinuscula(method.getName().substring(3));
+			    		Field campoLazy = dtoClass.getDeclaredField(nombreCampo);
+			    		Field[] campos = {campoLazy};
+			    		int id = 0;
+			    		for(Method metodo : dtoClass.getDeclaredMethods())
+			    		{
+			    			if(metodo.getName().startsWith("getId"))
+			    			{
+			    				id = (int)metodo.invoke(obj,null);
+			    				break;
+			    			}	    		  
+			    		}
+			    		Object[] args1 = {id};		
+			    		String claseStr = dtoClass.getAnnotation(Table.class).name();
+				    	String idStr = "id" + Xql.stringMayuscula(claseStr);
+				    	String xqlWhere = "$" + claseStr + "." + idStr + " = ?";
+				    	
+			    	if(!method.getReturnType().getSimpleName().equals("Collection"))
+			    	{
+				    	String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);		    				    	
+				  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
+				  		query.generarQuery(campos,dtoClass);		        
+				        String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
+				         
+				        List<T> objetosBD = connection.getObjetosDeBD(dtoClass, myQuery, args1, xqlWhere, true, obj, campos);
+				        obj = objetosBD.get(0);
+			        }
+		    		else
+		    		{
+		    			Class<T> claseDeColeccion = (Class<T>) campoLazy.getAnnotation(Relation.class).type();
+						List<T> objetosDeColeccion = (List<T>) Utn.query(con,claseDeColeccion,xqlWhere,id);
+						Collection<T> coleccionplz = new ArrayList<T>();
+						coleccionplz.addAll(objetosDeColeccion);
+						String camposta = Xql.stringMayuscula(nombreCampo);
+						for(Method metodo: dtoClass.getDeclaredMethods())	
+							if(metodo.getName().startsWith("set") && metodo.getName().substring(3).equals(camposta))
+								metodo.invoke(obj,coleccionplz);
+		    		}
+		    	} 
 		      return  proxy.invokeSuper(obj,args);
 		    }
 		  });
@@ -76,6 +95,7 @@ public class Utn {
 	// Invoca a: _query para obtener el SQL que se debe ejecutar
 	// Retorna: una lista de objetos de tipo T
 	// EJ: query(con,dtoClass,"$nombre  LIKE 'P%'") Donde $ indica variable de la clase.
+	@SuppressWarnings("unchecked")
 	public static <T> List<T> query(Connection con, Class<T> dtoClass, String xqlWhere, Object... args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
 		DataBaseConnection connection = new DataBaseConnection(con);
 		String query = _query(dtoClass, xqlWhere);	
@@ -102,7 +122,37 @@ public class Utn {
 								.filter(getter -> getter.getName().substring(3).equals(setter.getName().substring(3)))
 								.findFirst().get();
 				//Guardo el resultado del getter y lo uso para settear el proxy
-				Object argumentoSetter = elGetter.invoke(objeto,null);
+				Object argumentoSetter = elGetter.invoke(objeto,(Object[])null);
+				
+			/*	if(!Reflection.isThisClassAPrimitiveClass(elGetter.getReturnType()))
+				{
+					Enhancer enhancerRecursivo = setEnhancer(elGetter.getReturnType());
+					Object proxyRecursivo = Reflection.getConstructor(elGetter.getReturnType()).newInstance();
+					proxyRecursivo = elGetter.getReturnType().cast(enhancerRecursivo.create());
+					Method[] metodosRecursivos = elGetter.getReturnType().getDeclaredMethods();
+					//Saco todos los getters y setters
+					ArrayList<Method> gettersRecursivos = Reflection.getGettersSetters(metodosRecursivos,"get");
+					ArrayList<Method> settersRecursivos = Reflection.getGettersSetters(metodosRecursivos,"set");
+					for(Method setterRecursivo:settersRecursivos)
+					{
+						//Busco el getter de cada setter
+						Method elGetterRecursivo = gettersRecursivos.stream()
+									.filter(getterRec -> getterRec.getName().substring(3).equals(setterRecursivo.getName().substring(3)))
+									.findFirst().get();
+						
+						System.out.println(elGetterRecursivo.getName());
+						System.out.println(setterRecursivo.getName());
+						
+						Object argumentoBienClasificado = elGetter.getReturnType().newInstance();
+						argumentoBienClasificado = elGetter.getReturnType().cast(argumentoSetter);
+						
+						System.out.println(argumentoBienClasificado);
+						
+						Object yanise = elGetterRecursivo.invoke(argumentoBienClasificado,(Object[])null);
+						setterRecursivo.invoke(proxyRecursivo,yanise);
+					}
+				}*/
+				
 				setter.invoke(proxy,argumentoSetter);
 			}
 			
