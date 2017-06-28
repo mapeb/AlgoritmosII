@@ -183,7 +183,7 @@ public class Utn {
 		String xqlWhere = Query.cambiarAtributoPorNombreEnTabla(Reflection.getIdFieldAsField(dtoClass), dtoClass,nombreCampo);
 		
 		String xqlFinal = query.getAtributosRealesDeTabla(xqlWhere, dtoClass);
-		
+		String xql = "$"+dtoClass.getSimpleName()+"."+Reflection.getIdField(dtoClass)+" = ?";
 		int id = 0;
 		for(Method metodo : dtoClass.getDeclaredMethods())
 		{
@@ -197,7 +197,8 @@ public class Utn {
 		miQuery += " WHERE " + xqlFinal;
 		
 		DataBaseConnection connection = new DataBaseConnection(con);
-		return(connection.delete(con,miQuery, args, xqlFinal, dtoClass));
+		return connection.delete(con,miQuery,args,xql,dtoClass);
+		//return(connection.delete(con,miQuery, args, xql, dtoClass));
 	}
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
