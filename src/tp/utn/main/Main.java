@@ -18,7 +18,7 @@ import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.Utn;
 import tp.utn.ann.Column;
 import tp.utn.ann.Table;
-import tp.utn.demo.domainReal.*;
+import tp.utn.demo.domain.*;
 
 public class Main
 {
@@ -26,34 +26,34 @@ public class Main
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException
 	{
 			Connection con = SingletonConexion.getConnection();
-			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"","");
-			/*for(Persona per : lista)
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"$Persona.nombre = ? AND $Direccion.idDireccion = ?","TU CHOTA",2);
+			for(Persona per : lista)
 			{
 				
 				System.out.println("Nombre: " + per.getNombre());
-				/*
+				
 				for(Persona unaPersona : per.getDireccion().getPersonas())
 				{
 				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
-				}*/
-				/*System.out.println("Ocupacion: " + per.ocupacion);
+				}
+				System.out.println("Ocupacion: " + per.ocupacion);
 				System.out.println("Ocupacion: " + per.getOcupacion().getDescripcion());
 				System.out.println("Descripcion: " + per.getOcupacion().getTipoOcupacion().getDescripcion());
 				System.out.println("");
 			
-			}*/
-			
+			}
+			/*
 			List<Persona> otralista = (List<Persona>) Utn.findAll(con, Persona.class);
 			
 			for(Persona per : lista)
 			{
 				
 				System.out.println("Nombre: " + per.getNombre());
-				/*
+				
 				for(Persona unaPersona : per.getDireccion().getPersonas())
 				{
 				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
-				}*/
+				}
 				System.out.println("Ocupacion: " + per.ocupacion);
 				System.out.println("Ocupacion: " + per.getOcupacion().getDescripcion());
 				System.out.println("Descripcion: " + per.getOcupacion().getTipoOcupacion().getDescripcion());
@@ -65,11 +65,11 @@ public class Main
 			{
 				
 				System.out.println("Nombre: " + per.getNombre());
-				/*
+				
 				for(Persona unaPersona : per.getDireccion().getPersonas())
 				{
 				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
-				}*/
+				}
 				System.out.println("Ocupacion: " + per.ocupacion);
 				System.out.println("Ocupacion: " + per.getOcupacion().getDescripcion());
 				System.out.println("Descripcion: " + per.getOcupacion().getTipoOcupacion().getDescripcion());
@@ -83,7 +83,7 @@ public class Main
 			System.out.println("");
 			
 			
-			int id = 10;
+			int id = 1;
 			Persona personaFound = Utn.find(con,Persona.class,id);
 			
 
@@ -91,10 +91,19 @@ public class Main
 			Direccion direccionFound = Utn.find(con,Direccion.class,id);
 			System.out.println(direccionFound.getNumero());
 			direccionFound.getPersonas().stream().forEach(persona -> System.out.println(persona.getNombre()));
-			*/
+			
 			System.out.println("La persona buscada por el id "+id+ " es " + personaFound.getNombre());
 			
-			List<Direccion> listaDeDirecc = (List<Direccion>) Utn.findAll(con, Direccion.class);
+			/*Persona aInsertar = new Persona();
+			aInsertar.setNombre("Giussa lindo");
+			aInsertar.setIdPersona(88);*/
+			
+			//System.out.println(Utn.insert(con,aInsertar));
+			
+//			Persona personaInsertada = Utn.find(con,Persona.class,88);
+	//		System.out.println(personaInsertada.getNombre());
+			
+			/*List<Direccion> listaDeDirecc = (List<Direccion>) Utn.findAll(con, Direccion.class);
 			
 			for(Direccion direcc: listaDeDirecc){
 				System.out.println("Calle: " + direcc.getCalle());
@@ -104,27 +113,26 @@ public class Main
 			
 			for(Ocupacion ocup: listaDeOcupaciones){
 				System.out.println("Descripcion: " + ocup.getDescripcion());
-			}
+			}*/
+			
+			//System.out.println("Cantidad de filas eliminadas " + Utn.delete(con,Persona.class,"$persona.idPersona = ?",88));
 			
 			Persona unaPer = new Persona();
 			
-			unaPer.setNombre("gay");
-			unaPer.setIdPersona(55);
+			unaPer.setNombre("Giussa te amo");
+			unaPer.setIdPersona(1);
 			
-			int blabla = Utn.update(con,unaPer);
+		//	System.out.println(Utn.update(con,unaPer));
 			
-			System.out.println(blabla);
 			
-			/*
-			List<Persona> listaDePelotudos = (List<Persona>) Utn.findAll(con, Persona.class);
-			
-			for(Persona pelotudo: listaDePelotudos){
-				System.out.println("Descripcion: " + pelotudo.getNombre());
-			}*/
+			System.out.println(Utn.update(con,Persona.class,"SET $Persona.nombre = ?  WHERE $Persona.idPersona = ?","Juanitocameladoss",1));
+			//System.out.println(blabla);
 			
 			
 			
-		/*	Persona p = new Persona();
+			
+			
+			/*Persona p = new Persona();
 			p.setNombre("juanitoElLoco");
 			p.setIdPersona(77);
 			
@@ -136,10 +144,10 @@ public class Main
 			d.setNumero(5);
 			
 			System.out.println("Cantidad de filas afectadas DIRECCION " +Utn.insert(con,d));
-			
-			System.out.println("Cantidad de filas eliminadas " + Utn.delete(con,Persona.class,"$persona.idPersona = ?",66));
-			int idEliminar = 77;
-			System.out.println("Cantidad de filas eliminadas con id " + idEliminar + " es: " + Utn.delete(con,Persona.class,idEliminar));*/
+			*/
+		
+	//	int idEliminar = 77;
+		//System.out.println("Cantidad de filas eliminadas con id " + idEliminar + " es: " + Utn.delete(con,Persona.class,idEliminar));
 	} 
 
 }

@@ -26,11 +26,7 @@ public class Xql
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
 	}
-	public void setVariablesXqlUpdate(String xql)
-	{
-		//$nombre=? WHERE ...
-		//if(variablesXqlUpdate.size())
-	}
+
 	public void setVariablesXqlWhere(String xql)
 	{
 		if(variablesXqlWhere.size()!=0)
@@ -38,7 +34,19 @@ public class Xql
 		String[] palabras=xql.split(" "); // TERMINAMOS DIVIENDO LAS COSAS EN SUBCLASES
 		for(String palabra:palabras)
 		{
-			if(palabra.substring(0,1).equals("$")) variablesXqlWhere.add(palabra.substring(1));
+			if(palabra.length()!=0 && palabra.substring(0,1).equals("$")) variablesXqlWhere.add(palabra.substring(1));
+		}
+	}
+	public void setVariablesXqlUpdate(String setDeUpdate)
+	{
+		if(variablesXqlUpdate.size()!=0) 
+			variablesXqlUpdate.clear();    // NO ME QUEDO OTRA YA QUE ES VARIABLE DE CLASE PORQUE 
+		String[] palabras=setDeUpdate.split(", "); // TERMINAMOS DIVIENDO LAS COSAS EN SUBCLASES
+		
+		for(String palabra:palabras)
+		{
+			if(palabra.substring(0,1).equals("$")) 
+			variablesXqlUpdate.add(palabra.split(" ")[0].substring(1));
 		}
 	}
 	public String getAtributoSinNombreClase(String anotacionSQL)

@@ -30,6 +30,9 @@ public class Query extends Xql
 	private static String condicionOrdenada;
 	private ArrayList<Field> atributosNoNulosDelObjeto;	
 	private ArrayList<Object> contenidoDeAtributosDelObjeto;
+	public static ArrayList<Object> contenidoDeAtributosSetDeUpdate;
+	private String atributosSetDeUpdate = "";
+	
 
 	public Query(String from)
 	{
@@ -37,6 +40,8 @@ public class Query extends Xql
 		select=new ArrayList<String>();
 		atributosNoNulosDelObjeto = new ArrayList<Field>();
 		contenidoDeAtributosDelObjeto = new ArrayList<Object>();
+		contenidoDeAtributosSetDeUpdate = new ArrayList<Object>();
+		//atributosSetDeUpdate = new ArrayList<String>();
 		this.from=from;
 
 	}
@@ -55,7 +60,7 @@ public class Query extends Xql
 	{
 		return contenidoDeAtributosDelObjeto;
 	}
-	public void generarQuery(Field[] campos, Class<?> dtoClass)
+	public void generarQuery(Field[] campos, Class<?> dtoClass, boolean esFindLPM)
 	{
 		for(Field campo:campos)
 		{
@@ -66,8 +71,8 @@ public class Query extends Xql
 				if(campo.getType().getAnnotation(Table.class)!=null)
 				{
 					// this.addJoin(campo, campo.getType());
-					this.addJoin(dtoClass,campo);
-					generarQuery(campo.getType().getDeclaredFields(),campo.getType());
+					this.addJoin(dtoClass,campo, esFindLPM);
+					generarQuery(campo.getType().getDeclaredFields(),campo.getType(), esFindLPM);
 				}
 			}
 		}
@@ -84,10 +89,23 @@ public class Query extends Xql
 		}
 		return cadena.toString();
 	}
-
+public String sacarPesosUpdate(String frase)
+{ 
+	StringBuffer cadena=new StringBuffer(); 
+	String[] palabras=frase.split(", ");
+	for(int i=0;i<palabras.length-1;i++)
+	{
+		 palabras[i] = sacarPesos(palabras[i]);
+		cadena=cadena.append(palabras[i]);
+		cadena = cadena.append(", ");
+	} 
+	String ultima = sacarPesos(palabras[palabras.length-1]);
+	cadena = cadena.append(ultima);
+	return cadena.toString();
+}
 public static String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoClass, String atributo)
 {
-	
+	 
 	String[] modificacion = condicionOrdenada.split(" ");
 	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
 	String reemplazo = "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
@@ -100,7 +118,26 @@ public static String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoCl
 		break;
 		}
 	}
-	if(aModificar != null)
+
+	condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
+	return condicionOrdenada;
+}
+public static String cambiarAtributoPorNombreEnTablaUpdate(Field campo, Class<?> dtoClass, String atributo)
+{
+	
+	String[] modificacion = condicionOrdenada.split(", ");
+	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
+	String reemplazo = "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla + " = ?";
+	String aModificar = null;  
+	for(String modif : modificacion)
+	{
+		if(modif.split(" ")[0].equals("$"+atributo))
+		{
+		 aModificar = modif;
+		break;
+		}
+	}
+  
 	condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
 	return condicionOrdenada;
 }
@@ -109,59 +146,125 @@ public String cambiarNombreClasePorNombreTabla(Field campo, Class<?> dtoClass, S
 	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
 return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 }
-	public String modificarAtributosClaseAFilasTabla(String xql, Class<?> dtoClass)
+public String modificarAtributosAFilaTablaLPM(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
+{
+	for(String atributo : variables)
 	{
+		 
+		if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
+		{
+			for(Field campo:dtoClass.getDeclaredFields())
+			{
+				if(campo.getName().equals(getAtributoSinNombreClase(atributo)))
+				{
+					
+					modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, atributo);
+					
+				}
+			}
+		}
+		else
+		{
+			int i=0;
+			for(Field campito:dtoClass.getDeclaredFields())
+			{
+				
+				if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
+				{
+					
+					for(Field campoSegunda:campito.getType().getDeclaredFields())
+					{
+						if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo)))
+						{
+							
+							modificacion = cambiarAtributoPorNombreEnTabla(campoSegunda,campito.getType(), atributo);
+							
+							i=1; 
+							break;
+						}
+					}
+				}
+				if(i==1) break;
+			}
+		}
+	}
+	return modificacion;
+}
+public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
+{
+	for(String atributo : variables)
+	{
+		 
+		if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
+		{
+			for(Field campo:dtoClass.getDeclaredFields())
+			{
+				if(campo.getName().equals(getAtributoSinNombreClase(atributo)))
+				{
+					
+					modificacion = cambiarAtributoPorNombreEnTablaUpdate(campo,dtoClass, atributo);
+					
+				}
+			}
+		}
+		else
+		{
+			int i=0;
+			for(Field campito:dtoClass.getDeclaredFields())
+			{
+				
+				if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
+				{
+					
+					for(Field campoSegunda:campito.getType().getDeclaredFields())
+					{
+						if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo)))
+						{
+							
+							modificacion = cambiarAtributoPorNombreEnTablaUpdate(campoSegunda,campito.getType(), atributo);
+							
+							i=1; 
+							break;
+						}
+					}
+				}
+				if(i==1) break;
+			}
+		}
+	}
+	return modificacion;
+}
+	public String modificarAtributosClaseAFilasTabla(String xql, Class<?> dtoClass, boolean esSetUpdate)
+	{ 
 		setVariablesXqlWhere(xql);
 		condicionOrdenada = xql;
 		ArrayList<String> variables=new ArrayList<String>();
 		String modificacion=xql;
-		for(String atributo : variablesXqlWhere)
-		{
-			
-			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
-			{
-				for(Field campo:dtoClass.getDeclaredFields())
-				{
-					if(campo.getName().equals(getAtributoSinNombreClase(atributo)))
-					{
-						
-						modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, atributo);
-						
-					}
-				}
-			}
-			else
-			{
-				int i=0;
-				for(Field campito:dtoClass.getDeclaredFields())
-				{
-					
-					if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
-					{
-						
-						for(Field campoSegunda:campito.getType().getDeclaredFields())
-						{
-							if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo)))
-							{
-								
-								modificacion = cambiarAtributoPorNombreEnTabla(campoSegunda,campito.getType(), atributo);
-								
-								i=1; 
-								break;
-							}
-						}
-					}
-					if(i==1) break;
-				}
-			}
-		}
+		modificacion = modificarAtributosAFilaTablaLPM(modificacion, dtoClass, variablesXqlWhere);
+		
 		return modificacion;
 	}
-	public String getAtributosRealesDeTabla(String xql, Class dtoClass)
+	public String modificarAtributosClaseAFilaTablaSetUpdate(String xql, Class<?> dtoClass)
 	{
-		String xqlConFilasDeTabla = modificarAtributosClaseAFilasTabla(xql, dtoClass);
+		setVariablesXqlUpdate(xql);
+		condicionOrdenada = xql;
+		ArrayList<String> variables=new ArrayList<String>();
+		String modificacion=xql;  
+		modificacion = modificarAtributosAFilaTablaLPMUpdate(modificacion, dtoClass, variablesXqlUpdate);
+		  
+		return modificacion;
+	}
+	public String getAtributosRealesDeTabla(String xql, Class dtoClass, boolean esUpdate)
+	{ 
+		String xqlConFilasDeTabla = modificarAtributosClaseAFilasTabla(xql, dtoClass,esUpdate); 
+		
 		return sacarPesos(xqlConFilasDeTabla);
 		
+	}
+	public String getAtributosRealesDeTablaSetUpdate(String xql, Class dtoClass)
+	{
+		String xqlSetUpdateConFilasDeTabla = modificarAtributosClaseAFilaTablaSetUpdate(xql, dtoClass);
+		return sacarPesosUpdate(xqlSetUpdateConFilasDeTabla);
 	}
 	public String setDeUpdate(String xql, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
@@ -197,65 +300,37 @@ return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 		
 		
 	}
-	public String generarStringUpdate(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException // HORRIBLE TENER QUE HACERLO ASI 
+	
+	public void settearAtributosNoNulosYContenidoParaUpdate(Class<?> dtoClass, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
-		Class dtoClass = obj.getClass();
-		String query = "UPDATE "+ Annotation.getTableName(dtoClass)+ " SET ";
 		
-		settearAtributosNoNulosYContenido(dtoClass, obj);
-		
-		int id = 0;
-		for(Method metodo : dtoClass.getDeclaredMethods())
-		{
-			if(metodo.getName().startsWith("getId"))
-			{
-				id = (int)metodo.invoke(obj,null);
-				break;
-			}	    		  
+		if(contenidoDeAtributosSetDeUpdate.size() != 0){
+			contenidoDeAtributosSetDeUpdate.clear();
 		}
-		
-		int cantidadAtributos = atributosNoNulosDelObjeto.size();
-		int i=0;
-		String parAtributoValor= "";
-		
-		for(Field atributoNoNulo : atributosNoNulosDelObjeto){
-			parAtributoValor = "";
-			if(cantidadAtributos>1){
-				parAtributoValor += Annotation.getAnnotationFieldName(atributoNoNulo)+ " = ";
-				
-				if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class)){
-					parAtributoValor += "'"+contenidoDeAtributosDelObjeto.get(i).toString()+"',";
-				}else{
-					parAtributoValor+=contenidoDeAtributosDelObjeto.get(i).toString()+", ";
+		atributosSetDeUpdate = "";
+		int cantidad = dtoClass.getDeclaredFields().length;
+		for(Field atributo : dtoClass.getDeclaredFields())
+		{
+			
+			Method getterAtributo = Reflection.getGetterDeAtributo(dtoClass,atributo);
+			Object contenido =  getterAtributo.invoke(obj,null);
+			if(atributo.getAnnotation(Column.class)!=null && contenido!=null && cantidad == dtoClass.getDeclaredFields().length)
+			{
+				atributosSetDeUpdate+="$"+dtoClass.getSimpleName()+"."+atributo.getName()+" = ?";
+				contenidoDeAtributosSetDeUpdate.add(contenido);
+				cantidad--;
+			}
+			else
+			{
+				if(atributo.getAnnotation(Column.class)!=null && contenido!=null)
+				{
+					atributosSetDeUpdate+=", $"+dtoClass.getSimpleName()+"."+atributo.getName()+" = ?";
+					contenidoDeAtributosSetDeUpdate.add(contenido);
 				}
-				
-				query += parAtributoValor;
-				cantidadAtributos--;
-				i++;
-			}else{
-				if(cantidadAtributos==1){
-					
-					parAtributoValor += Annotation.getAnnotationFieldName(atributoNoNulo)+ " = ";
-					if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class)){
-						parAtributoValor+="'"+contenidoDeAtributosDelObjeto.get(i).toString()+"'";
-					}
-					else{
-						parAtributoValor+=contenidoDeAtributosDelObjeto.get(i).toString();
-					}
-					query += parAtributoValor;
-					i++;
-				}
-			}	
+			}
 			
 		}
-		/*String nombreCampo = Reflection.getIdField(dtoClass);
 		
-		String xqlWhere = Query.cambiarAtributoPorNombreEnTabla(Reflection.getIdFieldAsField(dtoClass), dtoClass,nombreCampo);
-		
-		String xqlFinal = getAtributosRealesDeTabla(xqlWhere, dtoClass);
-		//return "UPDATE "+from+" SET " +" WHERE "+ xqlFinal;
-		query += " WHERE " + xqlFinal;*/
-		return query;
 	}
 	public void settearAtributosNoNulosYContenido(Class dtoClass, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
@@ -323,14 +398,58 @@ return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 	}
 	public String generarStringDelete(String xql, Class dtoClass)
 	{
-		String xqlFinal = getAtributosRealesDeTabla(xql, dtoClass);
+		String xqlFinal = getAtributosRealesDeTabla(xql, dtoClass, false);
 		return "DELETE FROM "+from+" WHERE " +xqlFinal;
+	}
+	public String generarStringUpdateLPM(Class<?> dtoClass, String atributosSet, String atributosWhere, Object[] valoresSet, Object[] valoresWhere)
+	{
+		String query = "UPDATE "+ Annotation.getTableName(dtoClass)+ " SET ";
+		
+		 
+		String setDeUpdateFinal =  getAtributosRealesDeTablaSetUpdate(atributosSet,dtoClass);
+		query+=setDeUpdateFinal;
+		//String xqlWhere = getAtributosRealesDeTabla(xql,dtoClass,true);
+		
+	
+		String xqlWhere = getAtributosRealesDeTabla(atributosWhere, dtoClass, false);
+		 variablesXqlUpdate.addAll(variablesXqlWhere);
+		variablesXqlWhere = variablesXqlUpdate;
+		contenidoDeAtributosSetDeUpdate.add(valoresWhere);
+		return query+= " WHERE " + xqlWhere;
+	}
+	public String generarStringUpdate(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException // HORRIBLE TENER QUE HACERLO ASI 
+	{
+		Class dtoClass = obj.getClass();
+		String query = "UPDATE "+ Annotation.getTableName(dtoClass)+ " SET ";
+		
+		settearAtributosNoNulosYContenidoParaUpdate(dtoClass, obj);
+		 
+		String setDeUpdateFinal =  getAtributosRealesDeTablaSetUpdate(atributosSetDeUpdate,dtoClass);
+		query+=setDeUpdateFinal;
+		//String xqlWhere = getAtributosRealesDeTabla(xql,dtoClass,true);
+		
+		int id = 0;
+		for(Method metodo : dtoClass.getDeclaredMethods())
+		{
+			if(metodo.getName().startsWith("getId"))
+			{
+				id = (int)metodo.invoke(obj,null);
+				break;
+			}	    		  
+		}
+	
+		String xqlWhere = "$"+dtoClass.getSimpleName()+"."+Reflection.getIdField(dtoClass)+" = ?";
+		xqlWhere = getAtributosRealesDeTabla(xqlWhere, dtoClass, false);
+		 variablesXqlUpdate.addAll(variablesXqlWhere);
+		variablesXqlWhere = variablesXqlUpdate;
+		contenidoDeAtributosSetDeUpdate.add(id);
+		return query+= " WHERE " + xqlWhere;
 	}
 	public String generarStringSelect(String xql, Class dtoClass)
 	{
 		String xqlFinal="";
 		if(!xql.equals(""))
-		xqlFinal =getAtributosRealesDeTabla(xql, dtoClass);
+		xqlFinal =getAtributosRealesDeTabla(xql, dtoClass,false);
 		String q="SELECT ";
 		for(String attr:this.getSelect())
 			q+=attr+",";
@@ -347,9 +466,12 @@ return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 		this.getSelect().add(newAtrr);
 	}
 
-	public void addJoin(Class<?> claseRaiz, Field campo)
+	public void addJoin(Class<?> claseRaiz, Field campo, boolean esFindLPM)
 	{
 		// Table tabla2 = (Table) clase2.getAnnotation(Table.class);
+		if(esFindLPM)
+			from+=" FULL JOIN "+Annotation.getTableName(campo.getType())+joinDeTablas(claseRaiz,campo);
+		else
 		from+=" JOIN "+Annotation.getTableName(campo.getType())+joinDeTablas(claseRaiz,campo);
 	}
 

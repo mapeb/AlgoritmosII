@@ -8,7 +8,7 @@ import tp.utn.ann.Id;
 import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
 
-@Table(name="dept", alias="d")
+@Table(name="deptT", alias="d")
 public class Dept 
 {
 	@Id(strategy=Id.ASSIGNED)

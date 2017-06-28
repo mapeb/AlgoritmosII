@@ -72,7 +72,7 @@ public class DataBaseConnection extends Xql
 			    	{
 				    	String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);		    				    	
 				  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
-				  		query.generarQuery(campos,dtoClass);		        
+				  		query.generarQuery(campos,dtoClass,false);		        
 				        String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
 				         
 				        List<T> objetosBD = connection.getObjetosDeBD(dtoClass, myQuery, args1, xqlWhere, true, obj, campos);
@@ -95,7 +95,38 @@ public class DataBaseConnection extends Xql
 		  });
 		return enhancer;
 	}
-	
+	public int update(Connection con, String query, Object[] args, String xql, Class<?> dtoClass)
+	{
+		PreparedStatement pstm=null;
+		int filasAfectadas = 0;
+		try
+		{
+			pstm=this.getConnection().prepareStatement(query);
+			agregarCondicion(xql,pstm,args,dtoClass);
+			filasAfectadas = pstm.executeUpdate();
+		
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			throw new RuntimeException(ex);
+		}
+		finally
+		{
+			try
+			{
+				if(pstm!=null) pstm.close();
+
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace();
+				throw new RuntimeException(ex);
+			}
+			
+		}
+		return filasAfectadas;
+	}
 	public int delete(Connection con, String query, Object[] args, String xql, Class<?> dtoClass)
 	{
 		PreparedStatement pstm=null;
@@ -458,6 +489,7 @@ public class DataBaseConnection extends Xql
 				if(attr.equals(tipo)||attr.equals(stringMayuscula(tipo))||(attr.equals("Int")&&tipo.equals("Integer")))
 				{
 					// SETEA SEGUN EL SETTER PERTINENTE DEL PSTM
+					
 					setter.invoke(pstm,i+1,args[i]);
 					i++;
 					break;

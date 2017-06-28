@@ -6,7 +6,7 @@ import tp.utn.ann.Column;
 import tp.utn.ann.Id;
 import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
-@Table(name="direccion")
+@Table(name="direccionT")
 public class Direccion
 {
 	@Id(strategy=Id.IDENTITY)

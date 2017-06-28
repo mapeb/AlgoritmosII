@@ -24,11 +24,13 @@ import tp.utn.Reflection;
 public class Utn {
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql <- la
 	// consulta
+	private static boolean esFind;
+	private static Object[] args;
 	public static <T> String _query(Class<T> dtoClass, String xql) {
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
 		Field[] campos = dtoClass.getDeclaredFields();
 		
-		query.generarQuery(campos, dtoClass);
+		query.generarQuery(campos, dtoClass, esFind);
 		return query.generarStringSelect(xql, dtoClass);
 	}
 
@@ -67,7 +69,7 @@ public class Utn {
 			    	{
 				    	String nombreAtributoEnTabla = DataBaseConnection.nombreAtributoEnTabla(dtoClass,campoLazy);		    				    	
 				  		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
-				  		query.generarQuery(campos,dtoClass);		        
+				  		query.generarQuery(campos,dtoClass,false);		        
 				        String myQuery = query.generarStringSelect(xqlWhere,dtoClass);
 				         
 				        List<T> objetosBD = connection.getObjetosDeBD(dtoClass, myQuery, args1, xqlWhere, true, obj, campos);
@@ -139,6 +141,7 @@ public class Utn {
 		String idClase = Reflection.getIdField(dtoClass);
 		String clase = dtoClass.getSimpleName();
 		String xqlWhere = "$"+clase+"."+idClase+" = ?";
+		esFind = true;
 		List<T> listaObjetos = query(con, dtoClass, xqlWhere, id);
 		return listaObjetos.get(0);
 		
@@ -160,44 +163,97 @@ public class Utn {
 	// Invoca a: _update para obtener el SQL que se debe ejecutar
 	// Retorna: la cantidad de filas afectadas luego de ejecutar el SQL
 	public static int update(Connection con, Class<?> dtoClass, String xql, Object... args) {
+		// SET $PERSONA.NOMBRE=?, $PERSONA.APELLIDO=? WHERE $PERSONA.ID=?    
+		// ARGS .. "JUANI","CABANAS",1
+		
+		String[] division = xql.split("WHERE");
+		String[] atributosSet = division[0].split(",");
+		String hola = null;
+		String[] atributos2SetHDP = new String[atributosSet.length];
+		int j=0;
+		for(String atributo : atributosSet)
+		{
+			if(atributo.startsWith("SET "))
+			{
+				atributos2SetHDP[j] = atributo.substring(4);
+				j++;
+				
+			}
+		}
+		
+
+		int cantidadAtriutosSet = atributos2SetHDP.length;
+		String atributosDelWhere = division[1];
+		int cantidadAtributosWhere = atributosDelWhere.split(", ").length;
+		StringBuilder builder = new StringBuilder();
+		for(String s : atributos2SetHDP) {
+		    builder.append(s);
+		}
+		String atributosUpdate = builder.toString();
+		Object[] atributosUpdateYWhere = args;
+		Object[] valoresUpdate = new Object[cantidadAtriutosSet];
+		Object[] valoresWhere = new Object[cantidadAtributosWhere];
+		for(int i=0; i<cantidadAtriutosSet;i++)
+		{
+			valoresUpdate[i] = atributosUpdateYWhere[i];
+			
+		}
+		int k=0;
+		for(int i=cantidadAtriutosSet; i<=cantidadAtributosWhere;i++)
+		{
+			valoresWhere[k] = atributosUpdateYWhere[i];
+			
+		}
+		
+		Query query = new Query();
+		String miQuery = query.generarStringUpdateLPM(dtoClass, atributosUpdate, atributosDelWhere, valoresUpdate, valoresWhere);
+		
 		DataBaseConnection connection = new DataBaseConnection(con);
-		String myQuery = _update(dtoClass, xql);
+	
+		Object[] args2 = new Object[valoresUpdate.length+valoresWhere.length];
+		int i=0;
+		for(Object contenidito : valoresUpdate)
+		{
+			args2[i] = contenidito;
+			i++;
+			
+		}
+		int w=valoresUpdate.length;
+		for(Object contenidote : valoresWhere)
+		{
+			args2[w] = contenidote;
+			w++;
+			
+		}
+		
+		return connection.update(con,miQuery,args2,"",dtoClass);
 		
 		
 		
-		return 0;
 	}
+
+	
 
 	// Invoca a: update
 	// Que hace?: actualiza todos los campos de la fila identificada por el id
 	// de dto
 	// Retorna: Cuantas filas resultaron modificadas (deberia: ser 1 o 0)
 	public static int update(Connection con, Object dto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		Class dtoClass = dto.getClass();
-		
 		Query query = new Query();
 		String miQuery = query.generarStringUpdate(dto);
-		
-		String nombreCampo = Reflection.getIdField(dtoClass);
-		
-		String xqlWhere = Query.cambiarAtributoPorNombreEnTabla(Reflection.getIdFieldAsField(dtoClass), dtoClass,nombreCampo);
-		
-		String xqlFinal = query.getAtributosRealesDeTabla(xqlWhere, dtoClass);
-		String xql = "$"+dtoClass.getSimpleName()+"."+Reflection.getIdField(dtoClass)+" = ?";
-		int id = 0;
-		for(Method metodo : dtoClass.getDeclaredMethods())
-		{
-			if(metodo.getName().startsWith("getId"))
-			{
-				id = (int)metodo.invoke(dto,null);
-				break;
-			}	    		  
-		}
-		Object[] args = {id};
-		miQuery += " WHERE " + xqlFinal;
-		
+
 		DataBaseConnection connection = new DataBaseConnection(con);
-		return connection.delete(con,miQuery,args,xql,dtoClass);
+		ArrayList<Object> contenido = Query.contenidoDeAtributosSetDeUpdate;
+		Object[] args = new Object[contenido.size()];
+		int i=0;
+		for(Object contenidito : contenido)
+		{
+			args[i] = contenidito;
+			i++;
+			
+		}
+		
+		return connection.update(con,miQuery,args,"",dto.getClass());
 		//return(connection.delete(con,miQuery, args, xql, dtoClass));
 	}
 

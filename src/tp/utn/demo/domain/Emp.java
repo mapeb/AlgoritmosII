@@ -6,7 +6,7 @@ import tp.utn.ann.Column;
 import tp.utn.ann.Id;
 import tp.utn.ann.Table;
 
-@Table(name="emp")
+@Table(name="empT")
 public class Emp
 {
 	@Id(strategy=Id.IDENTITY)
