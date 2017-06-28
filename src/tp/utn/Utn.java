@@ -17,7 +17,7 @@ import net.sf.cglib.proxy.MethodProxy;
 import tp.utn.ann.Column;
 import tp.utn.ann.Relation;
 import tp.utn.ann.Table;
-import tp.utn.demo.domain.*;
+import tp.utn.demo.domainReal.*;
 import tp.utn.main.SingletonConexion;
 import tp.utn.Reflection;
 
@@ -146,14 +146,15 @@ public class Utn {
 
 	// Retorna: una todasa las filas de la tabla representada por dtoClass
 	// Invoca a: query
-	private static <T> List<T> findAll(Connection con, Class<T> dtoClass) {
-		return null;
+	public static <T> List<T> findAll(Connection con, Class<T> dtoClass) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+		
+		return(List<T>) query(con, dtoClass, "", "");
 	}
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
 	public static <T> String _update(Class<T> dtoClass, String xql) { // XQL =  
 		Query query = new Query(dtoClass.getAnnotation(Table.class).name());
-		return query.generarStringUpdate(xql,dtoClass);
+		return null;
 	}
 
 	// Invoca a: _update para obtener el SQL que se debe ejecutar
@@ -171,9 +172,32 @@ public class Utn {
 	// Que hace?: actualiza todos los campos de la fila identificada por el id
 	// de dto
 	// Retorna: Cuantas filas resultaron modificadas (deberia: ser 1 o 0)
-	public static int update(Connection con, Object dto) {
+	public static int update(Connection con, Object dto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Class dtoClass = dto.getClass();
 		
-		return 0;
+		Query query = new Query();
+		String miQuery = query.generarStringUpdate(dto);
+		
+		String nombreCampo = Reflection.getIdField(dtoClass);
+		
+		String xqlWhere = Query.cambiarAtributoPorNombreEnTabla(Reflection.getIdFieldAsField(dtoClass), dtoClass,nombreCampo);
+		
+		String xqlFinal = query.getAtributosRealesDeTabla(xqlWhere, dtoClass);
+		
+		int id = 0;
+		for(Method metodo : dtoClass.getDeclaredMethods())
+		{
+			if(metodo.getName().startsWith("getId"))
+			{
+				id = (int)metodo.invoke(dto,null);
+				break;
+			}	    		  
+		}
+		Object[] args = {id};
+		miQuery += " WHERE " + xqlFinal;
+		
+		DataBaseConnection connection = new DataBaseConnection(con);
+		return(connection.delete(con,miQuery, args, xqlFinal, dtoClass));
 	}
 
 	// Retorna: el SQL correspondiente a la clase dtoClass acotado por xql
@@ -215,9 +239,9 @@ public class Utn {
 	public static int insert(Connection con, Object dto) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Query query = new Query();
 		String miQuery = query.generarStringInsert(dto);
-		System.out.println(query);
+		System.out.println(miQuery);
 		DataBaseConnection connection = new DataBaseConnection(con);
-		return(connection.insertIntoTable(con,miQuery));
+		return(connection.insertOUpdateTable(con,miQuery));
 	
 	}
 

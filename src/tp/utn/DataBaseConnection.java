@@ -129,7 +129,7 @@ public class DataBaseConnection extends Xql
 		return filasAfectadas;
 		
 	}
-	public int insertIntoTable(Connection con, String query) // RETORNA FILAS AFECTADAS - DEBERÍA SER UNA
+	public int insertOUpdateTable(Connection con, String query) // RETORNA FILAS AFECTADAS - DEBERÍA SER UNA
 	{
 		PreparedStatement pstm=null;
 		int filasAfectadas = 0;
@@ -161,6 +161,7 @@ public class DataBaseConnection extends Xql
 		}
 		return filasAfectadas;
 	}
+	
 	public <T> List<T> getObjetosDeBD(Class<?> dtoClass, String query, Object[] args, String xql, boolean chequeoFetchType, Object objetoSetteado, Field[] camposDeQuery)
 	{
 		PreparedStatement pstm=null;

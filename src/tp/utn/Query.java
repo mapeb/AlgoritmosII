@@ -85,7 +85,7 @@ public class Query extends Xql
 		return cadena.toString();
 	}
 
-public String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoClass, String atributo)
+public static String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoClass, String atributo)
 {
 	
 	String[] modificacion = condicionOrdenada.split(" ");
@@ -100,7 +100,9 @@ public String cambiarAtributoPorNombreEnTabla(Field campo, Class<?> dtoClass, St
 		break;
 		}
 	}
-	return condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
+	if(aModificar != null)
+	condicionOrdenada = condicionOrdenada.replace(aModificar,reemplazo);
+	return condicionOrdenada;
 }
 public String cambiarNombreClasePorNombreTabla(Field campo, Class<?> dtoClass, String atributo)
 {
@@ -195,15 +197,74 @@ return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 		
 		
 	}
-	public String generarStringUpdate(String xqlWhere, Class dtoClass) // HORRIBLE TENER QUE HACERLO ASI 
+	public String generarStringUpdate(Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException // HORRIBLE TENER QUE HACERLO ASI 
 	{
+		Class dtoClass = obj.getClass();
+		String query = "UPDATE "+ Annotation.getTableName(dtoClass)+ " SET ";
+		
+		settearAtributosNoNulosYContenido(dtoClass, obj);
+		
+		int id = 0;
+		for(Method metodo : dtoClass.getDeclaredMethods())
+		{
+			if(metodo.getName().startsWith("getId"))
+			{
+				id = (int)metodo.invoke(obj,null);
+				break;
+			}	    		  
+		}
+		
+		int cantidadAtributos = atributosNoNulosDelObjeto.size();
+		int i=0;
+		String parAtributoValor= "";
+		
+		for(Field atributoNoNulo : atributosNoNulosDelObjeto){
+			parAtributoValor = "";
+			if(cantidadAtributos>1){
+				parAtributoValor += Annotation.getAnnotationFieldName(atributoNoNulo)+ " = ";
+				
+				if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class)){
+					parAtributoValor += "'"+contenidoDeAtributosDelObjeto.get(i).toString()+"',";
+				}else{
+					parAtributoValor+=contenidoDeAtributosDelObjeto.get(i).toString()+", ";
+				}
+				
+				query += parAtributoValor;
+				cantidadAtributos--;
+				i++;
+			}else{
+				if(cantidadAtributos==1){
+					
+					parAtributoValor += Annotation.getAnnotationFieldName(atributoNoNulo)+ " = ";
+					if(contenidoDeAtributosDelObjeto.get(i).getClass().equals(String.class)){
+						parAtributoValor+="'"+contenidoDeAtributosDelObjeto.get(i).toString()+"'";
+					}
+					else{
+						parAtributoValor+=contenidoDeAtributosDelObjeto.get(i).toString();
+					}
+					query += parAtributoValor;
+					i++;
+				}
+			}	
+			
+		}
+		/*String nombreCampo = Reflection.getIdField(dtoClass);
+		
+		String xqlWhere = Query.cambiarAtributoPorNombreEnTabla(Reflection.getIdFieldAsField(dtoClass), dtoClass,nombreCampo);
+		
 		String xqlFinal = getAtributosRealesDeTabla(xqlWhere, dtoClass);
-		return "UPDATE FROM "+from+" SET " +" WHERE "+ xqlFinal;
-		
-		
+		//return "UPDATE "+from+" SET " +" WHERE "+ xqlFinal;
+		query += " WHERE " + xqlFinal;*/
+		return query;
 	}
 	public void settearAtributosNoNulosYContenido(Class dtoClass, Object obj) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
 	{
+		if(atributosNoNulosDelObjeto.size() != 0){
+			atributosNoNulosDelObjeto.clear();
+		}
+		if(contenidoDeAtributosDelObjeto.size() != 0){
+			contenidoDeAtributosDelObjeto.clear();
+		}
 		for(Field atributo : dtoClass.getDeclaredFields())
 		{
 			Method getterAtributo = Reflection.getGetterDeAtributo(dtoClass,atributo);

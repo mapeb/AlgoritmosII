@@ -31,6 +31,20 @@ public class Reflection {
 		}
 		return null;
 	}
+	
+	public static Field getIdFieldAsField(Class dtoClass)
+	{
+		Field[] campos = dtoClass.getDeclaredFields();
+		for(Field campo : campos)
+		{
+			
+			String prefijo = campo.getName().substring(0,2);
+			if(prefijo.equals("id") || prefijo.equals("ID"))
+			return campo;
+		}
+		return null;
+	}
+	
 	public static ArrayList<Method> getGettersSetters(Method metodos[], String prefijo)
 	{
 		ArrayList<Method> settersOGetters=new ArrayList<Method>();
