@@ -26,7 +26,23 @@ public class Xql
 		return (palabra.substring(0,1).toLowerCase()+palabra.substring(1));
 
 	}
-
+	public boolean esMasDeUnaClase(String atributo)
+	{
+		 String[] division = atributo.split("\\.");
+		 return division.length > 2;
+	}
+	public String getSubClaseYAtributo(String claseCompuesta)
+	{
+		String subClaseYAtributo="";
+	String[] clases = claseCompuesta.split("\\.");
+	for(int i=1;i<clases.length;i++)
+	{
+		subClaseYAtributo+=clases[i]+".";
+	}
+	if(subClaseYAtributo.endsWith("."))
+	subClaseYAtributo = subClaseYAtributo.substring(0,subClaseYAtributo.length()-1);
+	return subClaseYAtributo;
+	}
 	public void setVariablesXqlWhere(String xql)
 	{
 		if(variablesXqlWhere.size()!=0)

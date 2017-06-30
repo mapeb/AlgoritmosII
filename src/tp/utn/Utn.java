@@ -169,24 +169,24 @@ public class Utn {
 		String[] division = xql.split("WHERE");
 		String[] atributosSet = division[0].split(",");
 		String hola = null;
-		String[] atributos2SetHDP = new String[atributosSet.length];
+		String[] atributos2Set = new String[atributosSet.length];
 		int j=0;
 		for(String atributo : atributosSet)
 		{
 			if(atributo.startsWith("SET "))
 			{
-				atributos2SetHDP[j] = atributo.substring(4);
+				atributos2Set[j] = atributo.substring(4);
 				j++;
 				
 			}
 		}
 		
 
-		int cantidadAtriutosSet = atributos2SetHDP.length;
+		int cantidadAtriutosSet = atributos2Set.length;
 		String atributosDelWhere = division[1];
 		int cantidadAtributosWhere = atributosDelWhere.split(", ").length;
 		StringBuilder builder = new StringBuilder();
-		for(String s : atributos2SetHDP) {
+		for(String s : atributos2Set) {
 		    builder.append(s);
 		}
 		String atributosUpdate = builder.toString();
@@ -206,7 +206,7 @@ public class Utn {
 		}
 		
 		Query query = new Query();
-		String miQuery = query.generarStringUpdateLPM(dtoClass, atributosUpdate, atributosDelWhere, valoresUpdate, valoresWhere);
+		String miQuery = query.generarStringUpdate(dtoClass, atributosUpdate, atributosDelWhere, valoresUpdate, valoresWhere);
 		
 		DataBaseConnection connection = new DataBaseConnection(con);
 	

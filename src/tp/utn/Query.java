@@ -146,6 +146,79 @@ public String cambiarNombreClasePorNombreTabla(Field campo, Class<?> dtoClass, S
 	String nombreEnTabla = Annotation.getAnnotationFieldName(campo);
 return "$"+dtoClass.getAnnotation(Table.class).name()+"."+nombreEnTabla;
 }
+
+
+public String obtenerFilasYTablasRespectivas(String claseCompuesta, Class<?> dtoClass, String modificacion)
+{
+	
+	if(stringMayuscula(getClaseDe(claseCompuesta)).equals(dtoClass.getSimpleName()))
+	{
+		if(esMasDeUnaClase(claseCompuesta)) //ej: $ocupacion.tipoocupacion.descripcion siendo dtoClass Persona 
+		{
+			String subClaseYAtributo = getSubClaseYAtributo(claseCompuesta);
+			modificacion+=dtoClass.getAnnotation(Table.class).name()+"."+
+			obtenerFilasYTablasRespectivas(subClaseYAtributo,dtoClass, modificacion);
+		}
+		else
+		{
+		for(Field campo:dtoClass.getDeclaredFields())
+		{
+			if(campo.getName().equals(getAtributoSinNombreClase(claseCompuesta)))
+			{
+				
+				modificacion = cambiarAtributoPorNombreEnTabla(campo,dtoClass, claseCompuesta);
+				
+			}
+		}
+		}
+	}
+	else
+	{ //ej: $ocupacion.tipoocupacion.descripcion siendo dtoClass Persona 
+		int i=0;
+		for(Field campito:dtoClass.getDeclaredFields())
+		{
+			Class<?> clasePrincipal = campito.getType();
+			if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(claseCompuesta)).equals(campito.getType().getSimpleName()))
+			{
+				if(esMasDeUnaClase(claseCompuesta))
+				{
+					String subClaseYAtributo = getSubClaseYAtributo(claseCompuesta);
+					
+					modificacion+=clasePrincipal.getAnnotation(Table.class).name()+".";
+					modificacion=obtenerFilasYTablasRespectivas(subClaseYAtributo,campito.getType(), modificacion);
+				}
+				else
+				{
+				for(Field campoSegunda:campito.getType().getDeclaredFields())
+				{
+					if(campoSegunda.getName().equals(getAtributoSinNombreClase(claseCompuesta)))
+					{
+						
+						modificacion+=clasePrincipal.getAnnotation(Table.class).name()+".";
+						modificacion+=Annotation.getAnnotationFieldName(campoSegunda);
+						
+						i=1; 
+						break;
+					}
+				}
+				}
+			}
+			if(i==1) break;
+		}
+	}
+
+	return modificacion;
+}
+public String modificarAtributosYClase(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
+{//7FIJARSE ESTO ACA YA CASI ESTA
+	String modificaciones="";
+	for(String atributo : variables)
+	{
+		modificacion = obtenerFilasYTablasRespectivas(atributo, dtoClass, modificaciones);
+		modificacion = condicionOrdenada.replace(atributo,modificacion);
+	}
+	return modificacion;
+}
 public String modificarAtributosAFilaTablaLPM(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
 {
 	for(String atributo : variables)
@@ -190,47 +263,74 @@ public String modificarAtributosAFilaTablaLPM(String modificacion, Class<?> dtoC
 	}
 	return modificacion;
 }
-public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
+public String obtenerFilasYTablasRespectivasUdpate(String claseCompuesta, Class<?> dtoClass, String modificacion)
 {
-	for(String atributo : variables)
+	 
+	if(stringMayuscula(getClaseDe(claseCompuesta)).equals(dtoClass.getSimpleName()))
 	{
-		 
-		if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
+		if(esMasDeUnaClase(claseCompuesta))
 		{
-			for(Field campo:dtoClass.getDeclaredFields())
-			{
-				if(campo.getName().equals(getAtributoSinNombreClase(atributo)))
-				{
-					
-					modificacion = cambiarAtributoPorNombreEnTablaUpdate(campo,dtoClass, atributo);
-					
-				}
-			}
+			String subClaseYAtributo = getSubClaseYAtributo(claseCompuesta);
+			modificacion+=dtoClass.getAnnotation(Table.class).name()+"."+
+			obtenerFilasYTablasRespectivasUdpate(subClaseYAtributo,dtoClass, modificacion);
 		}
 		else
 		{
-			int i=0;
-			for(Field campito:dtoClass.getDeclaredFields())
+		for(Field campo:dtoClass.getDeclaredFields())
+		{
+			if(campo.getName().equals(getAtributoSinNombreClase(claseCompuesta)))
 			{
 				
-				if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
-				{
-					
-					for(Field campoSegunda:campito.getType().getDeclaredFields())
-					{
-						if(campoSegunda.getName().equals(getAtributoSinNombreClase(atributo)))
-						{
-							
-							modificacion = cambiarAtributoPorNombreEnTablaUpdate(campoSegunda,campito.getType(), atributo);
-							
-							i=1; 
-							break;
-						}
-					}
-				}
-				if(i==1) break;
+				modificacion = cambiarAtributoPorNombreEnTablaUpdate(campo,dtoClass, claseCompuesta);
+				
 			}
 		}
+		}
+	}
+	else
+	{
+		int i=0;
+		for(Field campito:dtoClass.getDeclaredFields())
+		{
+			Class<?> clasePrincipal = campito.getType();
+			
+			if((!Reflection.isPrimitiveClass(campito))&&stringMayuscula(getClaseDe(claseCompuesta)).equals(campito.getType().getSimpleName()))
+			{
+				if(esMasDeUnaClase(claseCompuesta))
+				{
+					String subClaseYAtributo = getSubClaseYAtributo(claseCompuesta);
+					
+					modificacion+=clasePrincipal.getAnnotation(Table.class).name()+".";
+					modificacion=obtenerFilasYTablasRespectivas(subClaseYAtributo,campito.getType(), modificacion);
+				}
+				else{
+
+				for(Field campoSegunda:campito.getType().getDeclaredFields())
+				{
+					if(campoSegunda.getName().equals(getAtributoSinNombreClase(claseCompuesta)))
+					{
+						
+						modificacion+=clasePrincipal.getAnnotation(Table.class).name()+".";
+						modificacion+=Annotation.getAnnotationFieldName(campoSegunda);
+						
+						i=1; 
+						break;
+					}
+				}
+				}
+			}
+			if(i==1) break;
+		}
+	}
+	return modificacion;
+	}
+public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?> dtoClass, ArrayList<String> variables)
+{
+	String modificaciones="";
+	for(String atributo : variables)
+	{
+		modificacion = obtenerFilasYTablasRespectivasUdpate(atributo,dtoClass, modificaciones);
+		modificacion = condicionOrdenada.replace(atributo,modificacion);
 	}
 	return modificacion;
 }
@@ -240,7 +340,7 @@ public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?
 		condicionOrdenada = xql;
 		ArrayList<String> variables=new ArrayList<String>();
 		String modificacion=xql;
-		modificacion = modificarAtributosAFilaTablaLPM(modificacion, dtoClass, variablesXqlWhere);
+		modificacion = modificarAtributosYClase(modificacion, dtoClass, variablesXqlWhere);
 		
 		return modificacion;
 	}
@@ -257,6 +357,12 @@ public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?
 	public String getAtributosRealesDeTabla(String xql, Class dtoClass, boolean esUpdate)
 	{ 
 		String xqlConFilasDeTabla = modificarAtributosClaseAFilasTabla(xql, dtoClass,esUpdate); 
+		String[] descomposicion = xqlConFilasDeTabla.split("\\.");
+		if(descomposicion.length > 2)
+		{
+			xqlConFilasDeTabla = descomposicion[descomposicion.length-2]+"."+descomposicion[descomposicion.length-1];
+			 
+		}
 		
 		return sacarPesos(xqlConFilasDeTabla);
 		
@@ -401,7 +507,7 @@ public String modificarAtributosAFilaTablaLPMUpdate(String modificacion, Class<?
 		String xqlFinal = getAtributosRealesDeTabla(xql, dtoClass, false);
 		return "DELETE FROM "+from+" WHERE " +xqlFinal;
 	}
-	public String generarStringUpdateLPM(Class<?> dtoClass, String atributosSet, String atributosWhere, Object[] valoresSet, Object[] valoresWhere)
+	public String generarStringUpdate(Class<?> dtoClass, String atributosSet, String atributosWhere, Object[] valoresSet, Object[] valoresWhere)
 	{
 		String query = "UPDATE "+ Annotation.getTableName(dtoClass)+ " SET ";
 		

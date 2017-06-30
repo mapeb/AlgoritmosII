@@ -201,6 +201,7 @@ public class DataBaseConnection extends Xql
 		try
 		{
 			pstm=this.getConnection().prepareStatement(query);
+			if(!xql.equals(""))
 			agregarCondicion(xql,pstm,args,dtoClass);
 			rs=pstm.executeQuery();
 		
@@ -347,27 +348,40 @@ public class DataBaseConnection extends Xql
 
 
 
-	
-
 	// OBTIENE LAS VARIABLES DE LA CLASE RELACIONADAS AL WHERE. EN EL CASO DE
 	// QUE LA VARIABLE
 	// SEA DE OTRA TABLA, SE OBTIENE ESA SEGUNDA TABLA Y SE VERIFICA QUE ESTE EL
 	// CAMPO BUSCADO.
-	public <T> ArrayList<String> getVariablesDelWhere(Class<T> dtoClass)
+	//MODIFICA LAS VARIABLES DE VARIABLESXQLWHERE SETTEADAS ANTERIORMENTE 
+	//EN EL CASO DE QUE SEA UNA COMPOSICION DE CLASES CON ATRIBUTOS EJ: OCUPACION.TIPOOCUPACION.DESCRIPCION
+	//SOLO DEJA TIPOOCUPACION.DESCRIPCION
+	public <T> ArrayList<String> getVariablesDelWhere(Class<T> dtoClass, ArrayList<String> variablesWhere, ArrayList<String> variablesFin, ArrayList<Class> clasesFin)
 	{
-		ArrayList<String> variables=new ArrayList<String>();
-		for(String atributo:variablesXqlWhere)
+		ArrayList<String> variablesWhereRec = new ArrayList<String>();
+		
+		for(String atributo:variablesWhere)
 		{
 			if(stringMayuscula(getClaseDe(atributo)).equals(dtoClass.getSimpleName()))
 			{
+				if(esMasDeUnaClase(atributo))
+				{
+					String subClaseYAtributo = getSubClaseYAtributo(atributo);
+					variablesWhereRec.add(subClaseYAtributo);
+					getVariablesDelWhere(dtoClass, variablesWhereRec, variablesFin, clasesFin);
+				}
+				else
+				{
 				atributo=getAtributoSinNombreClase(atributo);
+				
 				for(Field campo:dtoClass.getDeclaredFields())
 				{
 					if(campo.getName().equals(atributo))
 					{
-						variables.add(campo.getName());
+						clasesFin.add(dtoClass);
+						variablesFin.add(campo.getName());
 						break;
 					}
+				}
 				}
 			}
 			else
@@ -377,15 +391,24 @@ public class DataBaseConnection extends Xql
 				{
 					if(!Reflection.isPrimitiveClass(campito)&&stringMayuscula(getClaseDe(atributo)).equals(campito.getType().getSimpleName()))
 					{
+						if(esMasDeUnaClase(atributo))
+						{ 
+							String subClaseYAtributo = getSubClaseYAtributo(atributo);
+							variablesWhereRec.add(subClaseYAtributo);
+							getVariablesDelWhere(campito.getType(), variablesWhereRec, variablesFin, clasesFin);
+						}
+						else{
 						atributo=getAtributoSinNombreClase(atributo);
 						for(Field campoSegunda:campito.getType().getDeclaredFields())
 						{
 							if(campoSegunda.getName().equals(atributo))
 							{
-								variables.add(campoSegunda.getName());
+								clasesFin.add(campito.getType());
+								variablesFin.add(campoSegunda.getName());
 								i=1;
 								break;
 							}
+						}
 						}
 					}
 					if(i==1) break;
@@ -393,7 +416,7 @@ public class DataBaseConnection extends Xql
 			}
 
 		}
-		return variables;
+		return variablesFin;
 	}
 
 	// BUSCA LOS SETTERS DE CADA CAMPO Y LOS INVOCA CON REFLECTION AL ENCONTRAR
@@ -438,6 +461,7 @@ public class DataBaseConnection extends Xql
 	// TABLA Y DEVOLVER EL TIPO DE DATO
 	public <T> String obtenerTipoCampoDeOtraClase(Class<T> dtoClass, String campo) throws NoSuchFieldException,SecurityException
 	{
+		
 		Field[] camposClasePrincipal=dtoClass.getDeclaredFields();
 		for(Field campoClaseP:camposClasePrincipal)
 		{
@@ -452,7 +476,7 @@ public class DataBaseConnection extends Xql
 
 	}
 
-	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, Class dtoClass, PreparedStatement pstm, Object[] args)
+	public void settearVariablesALaQuery(ArrayList<String> variablesDelWhere, ArrayList<Class> clasesDeVariablesWhere, PreparedStatement pstm, Object[] args)
 			throws IllegalAccessException,IllegalArgumentException,InvocationTargetException,NoSuchFieldException,SecurityException
 	{
 
@@ -461,28 +485,13 @@ public class DataBaseConnection extends Xql
 		
 		String tipo=null;
 		int i=0;
-		boolean esVariableDeLaClase=true;
-
+		int j=0;
 		for(String variable:variablesDelWhere)
 		{
-			try
-			{
-				// VERIFICA SI LA VARIABLE DEL WHERE ES DE LA CLASE O DE UNA
-				// CLASE QUE TIENE
-				// COMO ATRIBUTO. SI NO ES DE ESTA CLASE, CATCHEA EXCEPCION.
-				dtoClass.getDeclaredField(variable);
-
-			}
-			catch(NoSuchFieldException ex)
-			{
-				tipo=obtenerTipoCampoDeOtraClase(dtoClass,variable);
-				esVariableDeLaClase=false;
-			}
-			if(esVariableDeLaClase)
-			{
+			Class dtoClass = clasesDeVariablesWhere.get(j);
 				Field campo=dtoClass.getDeclaredField(variable);
 				tipo=campo.getType().getSimpleName();
-			}
+			
 			for(Method setter:setters)
 			{
 				String attr=Reflection.getAtributoDelSetterOGetter(setter);
@@ -495,7 +504,7 @@ public class DataBaseConnection extends Xql
 					break;
 				}
 			}
-
+			j++;
 		}
 	}
 
@@ -507,7 +516,9 @@ public class DataBaseConnection extends Xql
 		try
 		{
 			//setVariablesXql(xql);
-			settearVariablesALaQuery(getVariablesDelWhere(dtoClass),dtoClass,pstm,args);
+			ArrayList<String> variablesFin = new ArrayList<String>();
+			ArrayList<Class> clasesFin = new ArrayList<Class>();
+			settearVariablesALaQuery(getVariablesDelWhere(dtoClass, variablesXqlWhere, variablesFin, clasesFin),clasesFin,pstm,args);
 
 		}
 		catch(Exception ex)

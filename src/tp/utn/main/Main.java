@@ -26,12 +26,13 @@ public class Main
 	public static void main(String[] args) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException
 	{
 			Connection con = SingletonConexion.getConnection();
-			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"$Persona.nombre = ? AND $Direccion.idDireccion = ?","TU CHOTA",2);
+			List<Persona> lista = (List<Persona>) Utn.query(con,Persona.class,"$Persona.idPersona = ?",60);
 			for(Persona per : lista)
 			{
 				
 				System.out.println("Nombre: " + per.getNombre());
 				
+				System.out.println("Direccion: " + per.getDireccion().getCalle()+" "+per.getDireccion().getNumero());
 				for(Persona unaPersona : per.getDireccion().getPersonas())
 				{
 				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
@@ -42,25 +43,9 @@ public class Main
 				System.out.println("");
 			
 			}
-			/*
+			
 			List<Persona> otralista = (List<Persona>) Utn.findAll(con, Persona.class);
-			
-			for(Persona per : lista)
-			{
-				
-				System.out.println("Nombre: " + per.getNombre());
-				
-				for(Persona unaPersona : per.getDireccion().getPersonas())
-				{
-				System.out.println("Personas con esta direccion: " + unaPersona.getNombre());
-				}
-				System.out.println("Ocupacion: " + per.ocupacion);
-				System.out.println("Ocupacion: " + per.getOcupacion().getDescripcion());
-				System.out.println("Descripcion: " + per.getOcupacion().getTipoOcupacion().getDescripcion());
-				System.out.println("");
-			
-			}
-			
+			System.out.println("LISTA DE TODAS LAS PERSONAS");
 			for(Persona per : otralista)
 			{
 				
@@ -84,7 +69,7 @@ public class Main
 			
 			
 			int id = 1;
-			Persona personaFound = Utn.find(con,Persona.class,id);
+			Persona personaFound = Utn.find(con,Persona.class,60);
 			
 
 			/*	
@@ -115,7 +100,7 @@ public class Main
 				System.out.println("Descripcion: " + ocup.getDescripcion());
 			}*/
 			
-			//System.out.println("Cantidad de filas eliminadas " + Utn.delete(con,Persona.class,"$persona.idPersona = ?",88));
+			
 			
 			Persona unaPer = new Persona();
 			
@@ -125,14 +110,14 @@ public class Main
 		//	System.out.println(Utn.update(con,unaPer));
 			
 			
-			System.out.println(Utn.update(con,Persona.class,"SET $Persona.nombre = ?  WHERE $Persona.idPersona = ?","Juanitocameladoss",1));
+			System.out.println(Utn.update(con,Persona.class,"SET $Persona.nombre = ?  WHERE $Persona.idPersona = ?","Juanitocameladoss",60));
 			//System.out.println(blabla);
 			
 			
 			
 			
 			
-			/*Persona p = new Persona();
+			Persona p = new Persona();
 			p.setNombre("juanitoElLoco");
 			p.setIdPersona(77);
 			
@@ -144,10 +129,12 @@ public class Main
 			d.setNumero(5);
 			
 			System.out.println("Cantidad de filas afectadas DIRECCION " +Utn.insert(con,d));
-			*/
+			
 		
-	//	int idEliminar = 77;
+		int idEliminar = 77;
 		//System.out.println("Cantidad de filas eliminadas con id " + idEliminar + " es: " + Utn.delete(con,Persona.class,idEliminar));
+		System.out.println("DELETE COMPUESTO");
+		//System.out.println("Cantidad de filas eliminadas " + Utn.delete(con,Persona.class,"$persona.idPersona = ?",1));
 	} 
 
 }
